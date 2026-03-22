@@ -7,7 +7,7 @@
 
 ## Overview
 
-ALOE is a browser-based, full-stack cheminformatics pipeline that automates **fragment-based ligand design** for any enzyme target. Given an enzyme structure (`.pdb`) and a known ligand (`.sdf`/`.mol`/`.pdb`), ALOE systematically substitutes drug-relevant chemical fragments at user-selected positions on the ligand scaffold, docks every generated analogue into the enzyme's binding pocket, and returns a ranked list of candidates with their predicted binding affinities — all without requiring any specialist software on the user's machine.
+ALOE is a browser-based, full-stack cheminformatics pipeline that automates **fragment-based ligand design** for any enzyme target. Given an enzyme structure (`.pdb`) and a known ligand (`.sdf`), ALOE systematically substitutes drug-relevant chemical fragments at user-selected positions on the ligand scaffold, docks every generated analogue into the enzyme's binding pocket, and returns a ranked list of candidates with their predicted binding affinities — all without requiring any specialist software on the user's machine.
 
 ---
 
