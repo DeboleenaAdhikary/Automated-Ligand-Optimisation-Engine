@@ -1,0 +1,961 @@
+[23:24:44] [JOB SYSTEM] Received /start-pipeline request
+[23:24:44] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Queued pipeline request (enzyme=1BAG.pdb, ligand=Deoxynojirimycin.sdf, jobs=1)
+[23:24:44] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Worker thread started
+[23:24:44] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Progress 1% — Initialising processor…
+[23:24:44] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Processor ready; starting process_all()
+[23:24:44] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Progress 2% — Converting molecule to SMILES…
+[23:24:44] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:44] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] STEP 1: Converting Molecule to SMILES
+[23:24:44] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Molecule file: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/uploads/Deoxynojirimycin.sdf
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Format: SDF
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ SMILES (stored in memory): O[C@@H]1[C@H](NC[C@H](O)[C@H]1O)CO
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Formula: C6H13NO4
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Molecular Weight: 163.17
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Number of Atoms: 24
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Progress 5% — Selecting scaffold…
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] STEP 2: Scaffold Selection
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Using original molecule as scaffold
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Scaffold SMILES: O[C@@H]1[C@H](NC[C@H](O)[C@H]1O)CO
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] STEP 3: Scaffold Structure Visualization
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Scaffold SMILES: O[C@@H]1[C@H](NC[C@H](O)[C@H]1O)CO
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Number of atoms: 11
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Atom indices and types:
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ==================================================
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Index    Symbol     Type            Neighbors
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] --------------------------------------------------
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 0        O          SP3             [1]
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 1        C          SP3             [0, 2, 7]
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 2        C          SP3             [1, 3, 9]
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 3        N          SP3             [2, 4]
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 4        C          SP3             [3, 5]
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 5        C          SP3             [4, 6, 7]
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 6        O          SP3             [5]
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 7        C          SP3             [5, 8, 1]
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 8        O          SP3             [7]
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 9        C          SP3             [2, 10]
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 10       O          SP3             [9]
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Scaffold structure image saved to: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/scaffold_structure.png
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] (Open this image to see atom positions)
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Progress 8% — Marking active sites…
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] STEP 4: Mark Active Site Reaction Atoms
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Active site atoms set from web interface: []
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Progress 10% — Creating substitution jobs…
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] STEP 5: Create Substitution Jobs
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Non-interactive mode: Loading jobs from web interface...
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Job 1 validated successfully
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Fragment attachment dummy at: [5]
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Substituting carbons at: [4]
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Active sites: []
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ MW range set: 0.0-20.0 Da
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Job 1 initialized: OC[C@H]1NC([*])[C@H](O)[C@@H](O)[C@@H]1O
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Progress 14% — Preparing apo protein…
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] STEP 6: Preparing Apo Protein
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Loading enzyme: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/uploads/1BAG.pdb
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Available chains: ['B', 'A']
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Saved clean structure: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/enzyme_apo.pdb
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Chains removed: ['B']
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Heteroatoms removed: 149
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Progress 20% — Detecting binding pockets…
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] STEP 9: Binding Pocket Detection (P2Rank)
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Java 17: /opt/homebrew/opt/openjdk@17/bin/java
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Command: /Users/deboleenaadhikary/Downloads/p2rank_2.5.1/prank predict -f /Users/deboleenaadhikary/Downloads/p2rank_2.5.1/enzyme_apo.pdb -o /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/p2rank_results
+[23:24:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Working dir: /Users/deboleenaadhikary/Downloads/p2rank_2.5.1
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Predictions CSV: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/p2rank_results/enzyme_apo.pdb_predictions.csv
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Cα-distance box: 19 pocket residues, max Cα–Cα = 25.52 Å → box = 29.5 Å (+ 4.0 Å padding)
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Cα-distance box: 9 pocket residues, max Cα–Cα = 18.15 Å → box = 22.1 Å (+ 4.0 Å padding)
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Cα-distance box: 12 pocket residues, max Cα–Cα = 17.72 Å → box = 21.7 Å (+ 4.0 Å padding)
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Cα-distance box: 10 pocket residues, max Cα–Cα = 17.88 Å → box = 21.9 Å (+ 4.0 Å padding)
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Cα-distance box: 8 pocket residues, max Cα–Cα = 14.60 Å → box = 18.6 Å (+ 4.0 Å padding)
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Cα-distance box: 5 pocket residues, max Cα–Cα = 11.51 Å → box = 15.5 Å (+ 4.0 Å padding)
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Parsed 6 pockets from CSV
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Best pocket: rank=1, prob=0.799, center=(-14.08, 39.29, 26.31)
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ P2Rank found 6 pocket(s)
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] --------------------------------------------------------------------
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Detected Pockets (P2Rank) — sorted best first:
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] --------------------------------------------------------------------
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Rank   Center (x, y, z)                   Score      Box (Å)
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] --------------------------------------------------------------------
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 1      (-14.08, 39.29, 26.31)             0.799      30×30×30
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 2      (-13.08, 31.36, 31.86)             0.287      22×22×22
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 3      (-19.09, 15.73, 41.90)             0.286      22×22×22
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 4      (-15.13, 37.25, 36.24)             0.125      22×22×22
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 5      (-0.77, 21.99, 52.31)              0.030      19×19×19
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 6      (2.42, 31.26, 39.73)               0.019      16×16×16
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] --------------------------------------------------------------------
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 📐 Volume analysis:
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Pocket volume  (best pocket): 17.2 Å³
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Scaffold volume (VDW):         149.0 Å³
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Raw remaining space (Y-X):      0.0 Å³
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Relaxed limit ((Y*1.25)-X):     0.0 Å³
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ⚠️  Scaffold already fills/exceeds relaxed limit — volume filter disabled
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Progress 28% — Running fragment substitution…
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] STEP 7: Fragment Substitution
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Fragment library : /Users/deboleenaadhikary/Downloads/Fragment_lib/350_frag_sorted.csv
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Mode             : sorted CSV (binary-search)
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ------------------------------------------------------------
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Processing Job 1
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ------------------------------------------------------------
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Scaffold : OC[C@H]1NC([*])[C@H](O)[C@@H](O)[C@@H]1O
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] MW range : 0 – 20 Da
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Binary search on 82,030 entries → 21 fragments in MW window (skipped 82,009 outside range)
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Atom count correct: 12 atoms
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Clean SMILES: [H]C1N[C@H](CO)[C@@H](O)[C@H](O)[C@H]1O...
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Atom count correct: 12 atoms
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Clean SMILES: [H]C1N[C@H](CO)[C@@H](O)[C@H](O)[C@H]1O...
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Atom count correct: 12 atoms
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Clean SMILES: [H]C1N[C@H](CO)[C@@H](O)[C@H](O)[C@H]1O...
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Atom count correct: 12 atoms
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Clean SMILES: OC[C@H]1NC(O)[C@H](O)[C@@H](O)[C@@H]1O...
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Atom count correct: 12 atoms
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Clean SMILES: NC1N[C@H](CO)[C@@H](O)[C@H](O)[C@H]1O...
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Atom count correct: 12 atoms
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Clean SMILES: CC1N[C@H](CO)[C@@H](O)[C@H](O)[C@H]1O...
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Atom count correct: 12 atoms
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Clean SMILES: NC1N[C@H](CO)[C@@H](O)[C@H](O)[C@H]1O...
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Atom count correct: 12 atoms
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Clean SMILES: CC1N[C@H](CO)[C@@H](O)[C@H](O)[C@H]1O...
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Atom count correct: 12 atoms
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Clean SMILES: CC1N[C@H](CO)[C@@H](O)[C@H](O)[C@H]1O...
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Atom count correct: 12 atoms
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Clean SMILES: OC[C@H]1NC(O)[C@H](O)[C@@H](O)[C@@H]1O...
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Atom count correct: 12 atoms
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Clean SMILES: NC1N[C@H](CO)[C@@H](O)[C@H](O)[C@H]1O...
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Atom count correct: 13 atoms
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Clean SMILES: [H]CC1N[C@H](CO)[C@@H](O)[C@H](O)[C@H]1O...
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Atom count correct: 12 atoms
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Clean SMILES: CC1N[C@H](CO)[C@@H](O)[C@H](O)[C@H]1O...
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Atom count correct: 12 atoms
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Clean SMILES: OC[C@H]1NC(O)[C@H](O)[C@@H](O)[C@@H]1O...
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Atom count correct: 12 atoms
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Clean SMILES: CC1N[C@H](CO)[C@@H](O)[C@H](O)[C@H]1O...
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Atom count correct: 12 atoms
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Clean SMILES: NC1N[C@H](CO)[C@@H](O)[C@H](O)[C@H]1O...
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Atom count correct: 13 atoms
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Clean SMILES: [H]CC1N[C@H](CO)[C@@H](O)[C@H](O)[C@H]1O...
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Atom count correct: 13 atoms
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Clean SMILES: [H]OC1N[C@H](CO)[C@@H](O)[C@H](O)[C@H]1O...
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Atom count correct: 12 atoms
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Clean SMILES: OC[C@H]1NC(O)[C@H](O)[C@@H](O)[C@@H]1O...
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Atom count correct: 15 atoms
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Clean SMILES: [H]C([H])([H])C1N[C@H](CO)[C@@H](O)[C@H](O)[C@H]1O...
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Atom count correct: 12 atoms
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Clean SMILES: OC[C@H]1NC(F)[C@H](O)[C@@H](O)[C@@H]1O...
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Generated 21 ligands
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Saving ligands to: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/job1_ligands
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ⚠ Removed 16 duplicate SMILES (5 unique ligands remain)
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Saved 5 .smi files
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Fragment Substitution Summary
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Job 1:
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Total fragments: 82030
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Filtered by MW: 21
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Ligands generated: 21
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Progress 45% — Converting to PDBQT…
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] PDBQT CONVERSION FOR DOCKING
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] STEP 8: Converting Enzyme to PDBQT
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Converting enzyme to PDBQT format...
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Input:  /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/enzyme_apo.pdb
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Output: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/enzyme_apo.pdbqt
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Enzyme converted successfully
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Saved to: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/enzyme_apo.pdbqt
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Converting Ligands to PDBQT
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ------------------------------------------------------------
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Converting Job 1 Ligands
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ------------------------------------------------------------
+[23:24:48] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Found 5 ligand files
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Converted: 5/5
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] SDF files: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/job1_ligands/sdf_ligands
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] PDBQT files: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/job1_ligands/pdbqt_ligands
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] PDBQT Conversion Summary
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Enzyme: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/enzyme_apo.pdbqt
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Ligands:
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Job 1: 5/5 ligands
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Total: 5/5 ligands converted
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Progress 58% — Running molecular docking…
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] STEP 10: AutoDock Vina Molecular Docking
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] → Docking at all 6 pocket(s) to find best binding site
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Docking at Pocket 1: P2Rank Pocket 1
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Center: (-14.081, 39.286, 26.314)
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Box:    29 × 29 × 29 Å
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Output directory: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_1
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ------------------------------------------------------------
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Docking Job 1 Ligands (5 total)
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ------------------------------------------------------------
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Binding poses per ligand (num_modes): 1
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_1...
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 📄 Config for ligand_1:
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] receptor = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/enzyme_apo.pdbqt
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/job1_ligands/pdbqt_ligands/ligand_1.pdbqt
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] center_x = -14.081
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] center_y = 39.286
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] center_z = 26.314
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] size_x = 30
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] size_y = 30
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] size_z = 30
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] exhaustiveness = 6
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] num_modes = 1
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] energy_range = 3
+[23:24:49] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] out = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_1/job1/ligand_1_docked.pdbqt
+[23:24:50] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:24:50] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_2...
+[23:24:52] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:24:52] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_3...
+[23:24:55] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:24:55] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_4...
+[23:24:57] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:24:57] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_5...
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Docked: 5/5
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Docking at Pocket 2: P2Rank Pocket 2
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Center: (-13.083, 31.361, 31.863)
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Box:    22 × 22 × 22 Å
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Output directory: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_2
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ------------------------------------------------------------
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Docking Job 1 Ligands (5 total)
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ------------------------------------------------------------
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Binding poses per ligand (num_modes): 1
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_1...
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 📄 Config for ligand_1:
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] receptor = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/enzyme_apo.pdbqt
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/job1_ligands/pdbqt_ligands/ligand_1.pdbqt
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] center_x = -13.083
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] center_y = 31.361
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] center_z = 31.863
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] size_x = 22
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] size_y = 22
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] size_z = 22
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] exhaustiveness = 6
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] num_modes = 1
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] energy_range = 3
+[23:24:59] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] out = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_2/job1/ligand_1_docked.pdbqt
+[23:25:00] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:00] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_2...
+[23:25:02] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:02] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_3...
+[23:25:04] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:04] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_4...
+[23:25:07] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:07] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_5...
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Docked: 5/5
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Docking at Pocket 3: P2Rank Pocket 3
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Center: (-19.090, 15.734, 41.896)
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Box:    21 × 21 × 21 Å
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Output directory: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_3
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ------------------------------------------------------------
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Docking Job 1 Ligands (5 total)
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ------------------------------------------------------------
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Binding poses per ligand (num_modes): 1
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_1...
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 📄 Config for ligand_1:
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] receptor = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/enzyme_apo.pdbqt
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/job1_ligands/pdbqt_ligands/ligand_1.pdbqt
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] center_x = -19.090
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] center_y = 15.734
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] center_z = 41.896
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] size_x = 22
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] size_y = 22
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] size_z = 22
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] exhaustiveness = 6
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] num_modes = 1
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] energy_range = 3
+[23:25:09] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] out = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_3/job1/ligand_1_docked.pdbqt
+[23:25:10] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:10] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_2...
+[23:25:12] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:12] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_3...
+[23:25:14] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:14] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_4...
+[23:25:16] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:16] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_5...
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Docked: 5/5
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Docking at Pocket 4: P2Rank Pocket 4
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Center: (-15.135, 37.245, 36.240)
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Box:    21 × 21 × 21 Å
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Output directory: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_4
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ------------------------------------------------------------
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Docking Job 1 Ligands (5 total)
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ------------------------------------------------------------
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Binding poses per ligand (num_modes): 1
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_1...
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 📄 Config for ligand_1:
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] receptor = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/enzyme_apo.pdbqt
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/job1_ligands/pdbqt_ligands/ligand_1.pdbqt
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] center_x = -15.135
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] center_y = 37.245
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] center_z = 36.240
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] size_x = 22
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] size_y = 22
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] size_z = 22
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] exhaustiveness = 6
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] num_modes = 1
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] energy_range = 3
+[23:25:18] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] out = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_4/job1/ligand_1_docked.pdbqt
+[23:25:20] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:20] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_2...
+[23:25:22] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:22] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_3...
+[23:25:24] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:24] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_4...
+[23:25:26] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:26] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_5...
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Docked: 5/5
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Docking at Pocket 5: P2Rank Pocket 5
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Center: (-0.766, 21.992, 52.305)
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Box:    18 × 18 × 18 Å
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Output directory: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_5
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ------------------------------------------------------------
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Docking Job 1 Ligands (5 total)
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ------------------------------------------------------------
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Binding poses per ligand (num_modes): 1
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_1...
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 📄 Config for ligand_1:
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] receptor = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/enzyme_apo.pdbqt
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/job1_ligands/pdbqt_ligands/ligand_1.pdbqt
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] center_x = -0.766
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] center_y = 21.992
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] center_z = 52.305
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] size_x = 19
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] size_y = 19
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] size_z = 19
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] exhaustiveness = 6
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] num_modes = 1
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] energy_range = 3
+[23:25:28] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] out = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_5/job1/ligand_1_docked.pdbqt
+[23:25:30] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:30] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_2...
+[23:25:31] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:31] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_3...
+[23:25:33] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:33] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_4...
+[23:25:36] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:36] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_5...
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Docked: 5/5
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Docking at Pocket 6: P2Rank Pocket 6
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Center: (2.424, 31.257, 39.725)
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Box:    15 × 15 × 15 Å
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Output directory: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_6
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ------------------------------------------------------------
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Docking Job 1 Ligands (5 total)
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ------------------------------------------------------------
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Binding poses per ligand (num_modes): 1
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_1...
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 📄 Config for ligand_1:
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] receptor = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/enzyme_apo.pdbqt
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/job1_ligands/pdbqt_ligands/ligand_1.pdbqt
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] center_x = 2.424
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] center_y = 31.257
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] center_z = 39.725
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] size_x = 16
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] size_y = 16
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] size_z = 16
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] exhaustiveness = 6
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] num_modes = 1
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] energy_range = 3
+[23:25:37] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] out = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_6/job1/ligand_1_docked.pdbqt
+[23:25:39] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:39] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_2...
+[23:25:41] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:41] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_3...
+[23:25:43] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:43] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_4...
+[23:25:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:45] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ligand_5...
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Docked: 5/5
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Docking Summary
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Pocket 1: P2Rank Pocket 1
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Center: (-14.08, 39.29, 26.31)
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Job 1:
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Docked: 5/5 ligands
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Results: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_1/job1
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Total: 5 ligands docked
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Pocket 2: P2Rank Pocket 2
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Center: (-13.08, 31.36, 31.86)
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Job 1:
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Docked: 5/5 ligands
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Results: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_2/job1
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Total: 5 ligands docked
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Pocket 3: P2Rank Pocket 3
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Center: (-19.09, 15.73, 41.90)
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Job 1:
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Docked: 5/5 ligands
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Results: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_3/job1
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Total: 5 ligands docked
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Pocket 4: P2Rank Pocket 4
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Center: (-15.13, 37.25, 36.24)
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Job 1:
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Docked: 5/5 ligands
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Results: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_4/job1
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Total: 5 ligands docked
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Pocket 5: P2Rank Pocket 5
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Center: (-0.77, 21.99, 52.31)
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Job 1:
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Docked: 5/5 ligands
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Results: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_5/job1
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Total: 5 ligands docked
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Pocket 6: P2Rank Pocket 6
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Center: (2.42, 31.26, 39.73)
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Job 1:
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Docked: 5/5 ligands
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Results: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_6/job1
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Total: 5 ligands docked
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Progress 92% — Generating results CSV & ZIP…
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] STEP 11: Docking Results Analysis
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Job 1: Found 5 log files in /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_1/job1
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Job 1: Found 5 log files in /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_2/job1
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Job 1: Found 5 log files in /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_3/job1
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Job 1: Found 5 log files in /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_4/job1
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Job 1: Found 5 log files in /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_5/job1
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Job 1: Found 5 log files in /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_6/job1
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Found 30 docked ligands
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 📊 Generating results CSV: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_results_ranked.csv
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Top ligands reported : 3
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Conformation columns : 1  (= 1 substitution position(s) selected)
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ CSV written: 3 ligand(s), 1 conformation column(s)
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 📦 Creating ZIP file: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/top_10_ligands.zip
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Added receptor: enzyme_apo.pdbqt
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ ZIP created with receptor + 10 ligand files
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 📦 Creating ZIP file: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/top_ligands.zip
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ Added receptor: enzyme_apo.pdbqt
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ✓ ZIP created with receptor + 30 ligand files
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Docking Analysis Summary
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Total ligands analyzed: 30
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 📄 Output Files:
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] CSV Report: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_results_ranked.csv
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Top 10 ZIP: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/top_10_ligands.zip
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] All Ligands ZIP: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/top_ligands.zip
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 📊 Binding Affinity Statistics:
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Best (most negative): -5.54 kcal/mol
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Worst (least negative): -4.00 kcal/mol
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Average: -5.09 kcal/mol
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 🏆 Top 10 Best Binders:
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ------------------------------------------------------------
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Rank   Substrate            Affinity     MW
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ------------------------------------------------------------
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 1      ligand_3             -5.54        178.19
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 2      ligand_5             -5.53        181.16
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 3      ligand_3             -5.53        178.19
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 4      ligand_2             -5.52        179.17
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 5      ligand_2             -5.46        179.17
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 6      ligand_2             -5.46        179.17
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 7      ligand_5             -5.43        181.16
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 8      ligand_3             -5.42        178.19
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 9      ligand_4             -5.38        177.20
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 10     ligand_5             -5.38        181.16
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] 📈 Binding Affinity Distribution:
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Excellent (≤ -10 kcal/mol): 0 ligands
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Good (-10 to -8 kcal/mol): 0 ligands
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Moderate (-8 to -6 kcal/mol): 0 ligands
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Weak (> -6 kcal/mol): 30 ligands
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] ============================================================
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Progress 100% — Complete
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Pipeline core completed in 62.9s
+[23:25:47] [JOB 898a8f0b-20e6-4f65-a0d9-0ed3ad826758] Job completed successfully
+[00:00:20] [JOB SYSTEM] Received /start-pipeline request
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Queued pipeline request (enzyme=1BTL.pdb, ligand=Phenylacetic_acid.sdf, jobs=1)
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Worker thread started
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Progress 1% — Initialising processor…
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Processor ready; starting process_all()
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Progress 2% — Converting molecule to SMILES…
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] STEP 1: Converting Molecule to SMILES
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Molecule file: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/uploads/Phenylacetic_acid.sdf
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Format: SDF
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ SMILES (stored in memory): OC(=O)Cc1ccccc1
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Formula: C8H8O2
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Molecular Weight: 136.15
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Number of Atoms: 18
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Progress 5% — Selecting scaffold…
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] STEP 2: Scaffold Selection
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Using original molecule as scaffold
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Scaffold SMILES: OC(=O)Cc1ccccc1
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] STEP 3: Scaffold Structure Visualization
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Scaffold SMILES: OC(=O)Cc1ccccc1
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Number of atoms: 10
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Atom indices and types:
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ==================================================
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Index    Symbol     Type            Neighbors
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] --------------------------------------------------
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 0        O          SP2             [1]
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 1        C          SP2             [0, 2, 3]
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 2        O          SP2             [1]
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 3        C          SP3             [1, 4]
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 4        C          SP2             [3, 5, 9]
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 5        C          SP2             [4, 6]
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 6        C          SP2             [5, 7]
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 7        C          SP2             [6, 8]
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 8        C          SP2             [7, 9]
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 9        C          SP2             [8, 4]
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Scaffold structure image saved to: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/scaffold_structure.png
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] (Open this image to see atom positions)
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Progress 8% — Marking active sites…
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] STEP 4: Mark Active Site Reaction Atoms
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Active site atoms set from web interface: []
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Progress 10% — Creating substitution jobs…
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] STEP 5: Create Substitution Jobs
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Non-interactive mode: Loading jobs from web interface...
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Job 1 validated successfully
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Fragment attachment dummy at: [7]
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Substituting carbons at: [6]
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Active sites: []
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ MW range set: 10.0-30.0 Da
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Job 1 initialized: O=C(O)Cc1cc([*])ccc1
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Progress 14% — Preparing apo protein…
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] STEP 6: Preparing Apo Protein
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Loading enzyme: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/uploads/1BTL.pdb
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Available chains: ['A']
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Saved clean structure: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/enzyme_apo.pdb
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Chains removed: None
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Heteroatoms removed: 200
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Progress 20% — Detecting binding pockets…
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] STEP 9: Binding Pocket Detection (P2Rank)
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Java 17: /opt/homebrew/opt/openjdk@17/bin/java
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Command: /Users/deboleenaadhikary/Downloads/p2rank_2.5.1/prank predict -f /Users/deboleenaadhikary/Downloads/p2rank_2.5.1/enzyme_apo.pdb -o /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/p2rank_results
+[00:00:20] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Working dir: /Users/deboleenaadhikary/Downloads/p2rank_2.5.1
+[00:00:22] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Predictions CSV: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/p2rank_results/enzyme_apo.pdb_predictions.csv
+[00:00:22] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Cα-distance box: 13 pocket residues, max Cα–Cα = 20.49 Å → box = 24.5 Å (+ 4.0 Å padding)
+[00:00:22] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Cα-distance box: 7 pocket residues, max Cα–Cα = 13.96 Å → box = 18.0 Å (+ 4.0 Å padding)
+[00:00:22] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Cα-distance box: 7 pocket residues, max Cα–Cα = 14.10 Å → box = 18.1 Å (+ 4.0 Å padding)
+[00:00:22] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Parsed 3 pockets from CSV
+[00:00:22] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Best pocket: rank=1, prob=0.392, center=(11.01, 9.75, 37.18)
+[00:00:22] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ P2Rank found 3 pocket(s)
+[00:00:22] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] --------------------------------------------------------------------
+[00:00:22] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Detected Pockets (P2Rank) — sorted best first:
+[00:00:22] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] --------------------------------------------------------------------
+[00:00:22] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Rank   Center (x, y, z)                   Score      Box (Å)
+[00:00:22] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] --------------------------------------------------------------------
+[00:00:22] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 1      (11.01, 9.75, 37.18)               0.392      24×24×24
+[00:00:22] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 2      (-7.11, 0.75, 28.40)               0.067      18×18×18
+[00:00:22] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 3      (12.69, 8.01, 21.36)               0.003      18×18×18
+[00:00:22] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] --------------------------------------------------------------------
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 📐 Volume analysis:
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Pocket volume  (best pocket): 5882.5 Å³
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Scaffold volume (VDW):         128.6 Å³
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Raw remaining space (Y-X):      5753.8 Å³
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Relaxed limit ((Y*1.25)-X):     7224.4 Å³
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Fragments > 7224.4 Å³ will be excluded
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Progress 28% — Running fragment substitution…
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] STEP 7: Fragment Substitution
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Fragment library : /Users/deboleenaadhikary/Downloads/Fragment_lib/350_frag_sorted.csv
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Mode             : sorted CSV (binary-search)
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ------------------------------------------------------------
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Processing Job 1
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ------------------------------------------------------------
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Scaffold : O=C(O)Cc1cc([*])ccc1
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] MW range : 10 – 30 Da
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Binary search on 82,030 entries → 35 fragments in MW window (skipped 81,995 outside range)
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 11 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: Nc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 11 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: Cc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 11 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: Nc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 11 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: Cc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 11 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: Cc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 11 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: O=C(O)Cc1cccc(O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 11 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: Nc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 12 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: [H]Cc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 11 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: Cc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 11 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: O=C(O)Cc1cccc(O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 11 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: Cc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 11 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: Nc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 12 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: [H]Cc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 12 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: [H]Oc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 11 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: O=C(O)Cc1cccc(O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 14 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: [H]C([H])([H])c1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 11 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: O=C(O)Cc1cccc(F)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 14 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: [H]C([H])([H])c1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 12 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: C#Cc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 12 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: N#Cc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 12 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: C=Cc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 12 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: C=Cc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 13 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: [H]C=Cc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 12 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: O=Cc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 12 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: N=Nc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 12 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: N=Cc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 12 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: CNc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 12 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: C=Nc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 12 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: CCc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 12 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: O=Cc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 12 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: COc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 12 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: N=Nc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 12 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: CNc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 12 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: NCc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Atom count correct: 12 atoms
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Clean SMILES: CCc1cccc(CC(=O)O)c1...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Generated 35 ligands
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Cleared previous job1 directory (stale ligand prevention)
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Saving ligands to: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/job1_ligands
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ⚠ Removed 20 duplicate SMILES (15 unique ligands remain)
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Saved 15 .smi files
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Fragment Substitution Summary
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Job 1:
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Total fragments: 82030
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Filtered by MW: 35
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Ligands generated: 35
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Progress 45% — Converting to PDBQT…
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] PDBQT CONVERSION FOR DOCKING
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] STEP 8: Converting Enzyme to PDBQT
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Converting enzyme to PDBQT format...
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Input:  /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/enzyme_apo.pdb
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Output: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/enzyme_apo.pdbqt
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Enzyme converted successfully
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Saved to: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/enzyme_apo.pdbqt
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Converting Ligands to PDBQT
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ------------------------------------------------------------
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Converting Job 1 Ligands
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ------------------------------------------------------------
+[00:00:23] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Found 15 ligand files
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Converted: 15/15
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] SDF files: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/job1_ligands/sdf_ligands
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] PDBQT files: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/job1_ligands/pdbqt_ligands
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] PDBQT Conversion Summary
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Enzyme: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/enzyme_apo.pdbqt
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Ligands:
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Job 1: 15/15 ligands
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Total: 15/15 ligands converted
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Progress 58% — Running molecular docking…
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] STEP 10: AutoDock Vina Molecular Docking
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] → Docking at all 3 pocket(s) to find best binding site
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Docking at Pocket 1: P2Rank Pocket 1
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Center: (11.005, 9.747, 37.177)
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Box:    24 × 24 × 24 Å
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Output directory: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_1
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ------------------------------------------------------------
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Docking Job 1 Ligands (15 total)
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ------------------------------------------------------------
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Binding poses per ligand (num_modes): 1
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_1...
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 📄 Config for ligand_1:
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] receptor = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/enzyme_apo.pdbqt
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/job1_ligands/pdbqt_ligands/ligand_1.pdbqt
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] center_x = 11.005
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] center_y = 9.747
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] center_z = 37.177
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] size_x = 24
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] size_y = 24
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] size_z = 24
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] exhaustiveness = 6
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] num_modes = 1
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] energy_range = 3
+[00:00:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] out = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_1/job1/ligand_1_docked.pdbqt
+[00:00:27] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:00:27] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_10...
+[00:00:28] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:00:28] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_11...
+[00:00:30] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:00:30] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_12...
+[00:00:31] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:00:31] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_13...
+[00:00:33] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:00:33] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_14...
+[00:00:35] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:00:35] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_15...
+[00:00:36] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:00:36] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_2...
+[00:00:38] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:00:38] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_3...
+[00:00:39] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:00:39] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_4...
+[00:00:40] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:00:40] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_5...
+[00:00:42] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:00:42] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_6...
+[00:00:43] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:00:43] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_7...
+[00:00:44] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:00:44] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_8...
+[00:00:46] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:00:46] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_9...
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Docked: 15/15
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Docking at Pocket 2: P2Rank Pocket 2
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Center: (-7.113, 0.755, 28.397)
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Box:    18 × 18 × 18 Å
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Output directory: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_2
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ------------------------------------------------------------
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Docking Job 1 Ligands (15 total)
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ------------------------------------------------------------
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Binding poses per ligand (num_modes): 1
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_1...
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 📄 Config for ligand_1:
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] receptor = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/enzyme_apo.pdbqt
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/job1_ligands/pdbqt_ligands/ligand_1.pdbqt
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] center_x = -7.113
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] center_y = 0.755
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] center_z = 28.397
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] size_x = 18
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] size_y = 18
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] size_z = 18
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] exhaustiveness = 6
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] num_modes = 1
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] energy_range = 3
+[00:00:47] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] out = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_2/job1/ligand_1_docked.pdbqt
+[00:00:49] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:00:49] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_10...
+[00:00:50] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:00:50] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_11...
+[00:00:52] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:00:52] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_12...
+[00:00:53] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:00:53] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_13...
+[00:00:55] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:00:55] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_14...
+[00:00:56] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:00:56] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_15...
+[00:00:58] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:00:58] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_2...
+[00:00:59] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:00:59] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_3...
+[00:01:00] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:01:00] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_4...
+[00:01:01] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:01:01] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_5...
+[00:01:03] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:01:03] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_6...
+[00:01:04] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:01:04] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_7...
+[00:01:06] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:01:06] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_8...
+[00:01:07] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:01:07] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_9...
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Docked: 15/15
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Docking at Pocket 3: P2Rank Pocket 3
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Center: (12.695, 8.007, 21.363)
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Box:    18 × 18 × 18 Å
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Output directory: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_3
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ------------------------------------------------------------
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Docking Job 1 Ligands (15 total)
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ------------------------------------------------------------
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Binding poses per ligand (num_modes): 1
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_1...
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 📄 Config for ligand_1:
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] receptor = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/enzyme_apo.pdbqt
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/job1_ligands/pdbqt_ligands/ligand_1.pdbqt
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] center_x = 12.695
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] center_y = 8.007
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] center_z = 21.363
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] size_x = 18
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] size_y = 18
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] size_z = 18
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] exhaustiveness = 6
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] num_modes = 1
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] energy_range = 3
+[00:01:08] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] out = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_3/job1/ligand_1_docked.pdbqt
+[00:01:11] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:01:11] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_10...
+[00:01:14] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:01:14] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_11...
+[00:01:18] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:01:18] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_12...
+[00:01:21] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:01:21] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_13...
+[00:01:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:01:25] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_14...
+[00:01:28] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:01:28] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_15...
+[00:01:31] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:01:31] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_2...
+[00:01:34] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:01:34] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_3...
+[00:01:37] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:01:37] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_4...
+[00:01:39] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:01:39] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_5...
+[00:01:43] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:01:43] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_6...
+[00:01:46] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:01:46] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_7...
+[00:01:48] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:01:48] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_8...
+[00:01:51] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:01:51] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ligand_9...
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Docked: 15/15
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Docking Summary
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Pocket 1: P2Rank Pocket 1
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Center: (11.01, 9.75, 37.18)
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Job 1:
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Docked: 15/15 ligands
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Results: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_1/job1
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Total: 15 ligands docked
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Pocket 2: P2Rank Pocket 2
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Center: (-7.11, 0.75, 28.40)
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Job 1:
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Docked: 15/15 ligands
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Results: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_2/job1
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Total: 15 ligands docked
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Pocket 3: P2Rank Pocket 3
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Center: (12.69, 8.01, 21.36)
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Job 1:
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Docked: 15/15 ligands
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Results: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_3/job1
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Total: 15 ligands docked
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Progress 92% — Generating results CSV & ZIP…
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] STEP 11: Docking Results Analysis
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Job 1: Found 15 log files in /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_1/job1
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Job 1: Found 15 log files in /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_2/job1
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Job 1: Found 15 log files in /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_3/job1
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Found 45 docked ligands
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 📊 Generating results CSV: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_results_ranked.csv
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Top ligands reported : 3
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Conformation columns : 1  (= 1 substitution position(s) selected)
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ CSV written: 3 ligand(s), 1 conformation column(s)
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 📦 Creating ZIP file: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/top_10_ligands.zip
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Added receptor: enzyme_apo.pdbqt
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ ZIP created with receptor + 10 ligand files
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 📦 Creating ZIP file: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/top_ligands.zip
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ Added receptor: enzyme_apo.pdbqt
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ✓ ZIP created with receptor + 45 ligand files
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Docking Analysis Summary
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Total ligands analyzed: 45
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 📄 Output Files:
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] CSV Report: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_results_ranked.csv
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Top 10 ZIP: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/top_10_ligands.zip
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] All Ligands ZIP: /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/top_ligands.zip
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 📊 Binding Affinity Statistics:
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Best (most negative): -5.79 kcal/mol
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Worst (least negative): 4.37 kcal/mol
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Average: -2.61 kcal/mol
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 🏆 Top 10 Best Binders:
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ------------------------------------------------------------
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Rank   Substrate            Affinity     MW
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ------------------------------------------------------------
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 1      ligand_10            -5.79        163.18
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 2      ligand_9             -5.75        164.16
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 3      ligand_15            -5.72        165.19
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 4      ligand_7             -5.71        162.19
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 5      ligand_5             -5.68        160.17
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 6      ligand_13            -5.53        164.20
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 7      ligand_8             -5.51        164.16
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 8      ligand_3             -5.45        152.15
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 9      ligand_6             -5.38        161.16
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 10     ligand_2             -5.38        150.18
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] 📈 Binding Affinity Distribution:
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Excellent (≤ -10 kcal/mol): 0 ligands
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Good (-10 to -8 kcal/mol): 0 ligands
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Moderate (-8 to -6 kcal/mol): 0 ligands
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Weak (> -6 kcal/mol): 45 ligands
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] ============================================================
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Progress 100% — Complete
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Pipeline core completed in 94.8s
+[00:01:54] [JOB 71da5d9b-8bdd-40d1-b77b-dd94fb7f5e80] Job completed successfully

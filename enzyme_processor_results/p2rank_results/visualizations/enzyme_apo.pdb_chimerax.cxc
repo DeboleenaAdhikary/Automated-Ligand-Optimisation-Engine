@@ -1,0 +1,31 @@
+open data/enzyme_apo.pdb
+surf
+hide solvent
+color protein #bdbdde
+color ligand magenta
+
+
+color name color_pocket1 #5c93e6
+color name color_pocket2 #9d47b3
+color name color_pocket3 #e65c5c
+
+name pocket1_atoms @@serial_number=360 @@serial_number=840 @@serial_number=1105 @@serial_number=634 @@serial_number=635 @@serial_number=636 @@serial_number=637 @@serial_number=639 @@serial_number=640 @@serial_number=822 @@serial_number=823 @@serial_number=824 @@serial_number=839 @@serial_number=1496 @@serial_number=1498 @@serial_number=1138 @@serial_number=1645 @@serial_number=1135 @@serial_number=1136 @@serial_number=1137 @@serial_number=629 @@serial_number=1639 @@serial_number=1640 @@serial_number=1642 @@serial_number=1637 @@serial_number=1646 @@serial_number=1689 @@serial_number=1879 @@serial_number=1880 @@serial_number=1495
+color pocket1_atoms color_pocket1
+
+name pocket2_atoms @@serial_number=1429 @@serial_number=1430 @@serial_number=1767 @@serial_number=1768 @@serial_number=1319 @@serial_number=1330 @@serial_number=1614 @@serial_number=1721 @@serial_number=1320 @@serial_number=1322 @@serial_number=204
+color pocket2_atoms color_pocket2
+
+name pocket3_atoms @@serial_number=1966 @@serial_number=1942 @@serial_number=1814 @@serial_number=1834 @@serial_number=1932 @@serial_number=119 @@serial_number=146 @@serial_number=1832
+color pocket3_atoms color_pocket3
+
+
+
+open data/enzyme_apo.pdb_points.pdb.gz
+color by bfactor #2 palette lime:red  range 0,0.7
+
+
+set bgcolor #242455
+transparency 35
+graphics silhouettes true
+lighting full
+view

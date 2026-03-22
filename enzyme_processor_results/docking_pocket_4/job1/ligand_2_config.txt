@@ -1,0 +1,16 @@
+receptor = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/enzyme_apo.pdbqt
+ligand = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/job1_ligands/pdbqt_ligands/ligand_2.pdbqt
+
+center_x = -15.135
+center_y = 37.245
+center_z = 36.240
+
+size_x = 22
+size_y = 22
+size_z = 22
+
+exhaustiveness = 6
+num_modes = 1
+energy_range = 3
+
+out = /Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_4/job1/ligand_2_docked.pdbqt
