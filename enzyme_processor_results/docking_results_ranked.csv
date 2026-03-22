@@ -1,4 +1,0 @@
-Rank,Substrate_Name,SMILES,Molecular_Weight,Conformation_1_Affinity,PDBQT_File_Path,Job_ID,Pocket_ID
-1,ligand_10,N=Cc1cccc(CC(=O)O)c1,163.18,-5.785,/Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_1/job1/ligand_10_docked.pdbqt,1,1
-2,ligand_9,N=Nc1cccc(CC(=O)O)c1,164.16,-5.749,/Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_1/job1/ligand_9_docked.pdbqt,1,1
-3,ligand_15,NCc1cccc(CC(=O)O)c1,165.19,-5.722,/Users/deboleenaadhikary/Downloads/Run/enzyme_processor_results/docking_pocket_1/job1/ligand_15_docked.pdbqt,1,1
