@@ -119,7 +119,7 @@ P2Rank must be downloaded separately:
 
 ### Fragment Library
 
-Place the sorted fragment CSV in your chosen directory and update the default path in `Fullcode_updated_fixed.py`:
+Place the sorted fragment CSV in your chosen directory and update the default path in `Fullcode.py`:
 
 ```python
 _base = "/path/to/Fragment_lib/350_frag_sorted.csv"
@@ -130,7 +130,7 @@ _base = "/path/to/Fragment_lib/350_frag_sorted.csv"
 ```bash
 conda activate rdkit_env
 cd /path/to/Run/
-python Fullcode_updated_fixed.py
+python Fullcode.py
 # Open http://127.0.0.1:5001 in your browser
 ```
 
@@ -177,7 +177,7 @@ All fragment-substituted variants outperformed the baseline, confirming that the
 
 ```
 Run/
-├── Fullcode_updated_fixed.py     # Flask backend — full pipeline
+├── Fullcode.py     # Flask backend — full pipeline
 ├── enzyme_processor.html         # Frontend — single-page app
 ├── 350_frag_sorted.csv           # Pre-sorted fragment library
 ├── enzyme_processor_results/     # Output directory (auto-created)
