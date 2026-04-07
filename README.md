@@ -212,8 +212,8 @@ Run/
 ## Author
 
 **Deboleena Adhikary**  
-School of Life Sciences, University of Hyderabad  
-Institution of Eminence — *National Needs, Global Standards*
+Vellore Institute of Technology, Vellore
+Interned at School of Life Sciences, University of Hyderabad  (Institution of Eminence — *National Needs, Global Standards*)
 
 ---
 
