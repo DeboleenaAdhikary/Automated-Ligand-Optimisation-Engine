@@ -9,10 +9,21 @@ import sys
 import subprocess
 import time
 import json
+import base64
+import gc
+import math
+import hashlib
+import logging
+import secrets
 from pathlib import Path
 import re
 import csv
-from flask import Flask, request, jsonify, render_template, send_from_directory, abort
+import shutil
+from collections import defaultdict, deque
+from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
+from datetime import timedelta
+from flask import Flask, request, jsonify, render_template, send_from_directory, send_file, abort, make_response, session
+from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 import tempfile
 import json
@@ -20,12 +31,14 @@ import threading
 import uuid
 import io
 from contextlib import redirect_stdout, redirect_stderr
+
 try:
     from openbabel import openbabel as ob
     from Bio import PDB
     from Bio.PDB import PDBIO, Select
     from rdkit import Chem
-    from rdkit.Chem import BRICS, Descriptors, AllChem, Draw
+    from rdkit.Chem import BRICS, Descriptors, AllChem, Draw, rdMolDescriptors, Crippen, Lipinski
+    from rdkit.Chem.Scaffolds import MurckoScaffold
     from rdkit import RDLogger
 except ImportError as e:
     print(f"Missing package: {e}")
@@ -39,6 +52,236 @@ except ImportError as e:
 ob.obErrorLog.SetOutputLevel(ob.obError)
 # RDKit: suppress rdApp.warning / rdApp.error chatter (e.g. sanitization notes)
 RDLogger.DisableLog('rdApp.*')
+
+
+
+# ── AutoDock Vina executable discovery ────────────────────────────────────────
+def _find_vina_executable():
+    """
+    Locate the AutoDock Vina binary even when it is not on the system PATH.
+    Search order:
+      1. VINA_PATH environment variable (user override — highest priority)
+      2. shutil.which('vina')  — standard PATH lookup
+      3. Active conda/virtualenv prefix
+      4. Common conda environment directories
+      5. Common system install locations (macOS Homebrew, Linux /usr/local, etc.)
+    Returns the full path string, or 'vina' as a fallback (preserves old behaviour).
+    """
+    import shutil, os, sys
+
+    # 1. Explicit user override
+    env_path = os.environ.get('VINA_PATH', '').strip()
+    if env_path and os.path.isfile(env_path) and os.access(env_path, os.X_OK):
+        print(f"[Vina] Using VINA_PATH override: {env_path}")
+        return env_path
+
+    # 2. Standard PATH lookup
+    found = shutil.which('vina')
+    if found:
+        return found
+
+    # 3. Active conda / virtualenv prefix
+    candidate_roots = []
+    prefix = os.environ.get('CONDA_PREFIX') or os.environ.get('VIRTUAL_ENV') or ''
+    if prefix:
+        candidate_roots.append(prefix)
+
+    # 4. Conda environments directory (scan all envs)
+    conda_envs_dirs = []
+    # Common base paths for conda
+    for base in [
+        os.path.expanduser('~/miniconda3/envs'),
+        os.path.expanduser('~/anaconda3/envs'),
+        os.path.expanduser('~/miniforge3/envs'),
+        os.path.expanduser('~/mambaforge/envs'),
+        '/opt/miniconda3/envs',
+        '/opt/anaconda3/envs',
+        '/opt/miniforge3/envs',
+        '/usr/local/miniconda3/envs',
+        '/usr/local/anaconda3/envs',
+    ]:
+        if os.path.isdir(base):
+            try:
+                for env_name in os.listdir(base):
+                    env_dir = os.path.join(base, env_name)
+                    if os.path.isdir(env_dir):
+                        candidate_roots.append(env_dir)
+            except PermissionError:
+                pass
+
+    # 5. Flat system install locations
+    system_dirs = [
+        '/usr/local/bin',
+        '/usr/bin',
+        '/opt/homebrew/bin',          # macOS Homebrew (Apple Silicon)
+        '/usr/local/opt/autodock-vina/bin',
+        '/opt/local/bin',             # MacPorts
+        os.path.expanduser('~/bin'),
+        os.path.expanduser('~/.local/bin'),
+    ]
+
+    # Build search list: <root>/bin/vina  for each candidate root
+    searches = []
+    for root in candidate_roots:
+        searches.append(os.path.join(root, 'bin', 'vina'))
+        # Windows-style (ignored on POSIX but harmless)
+        searches.append(os.path.join(root, 'Scripts', 'vina.exe'))
+        searches.append(os.path.join(root, 'bin', 'vina.exe'))
+    for d in system_dirs:
+        searches.append(os.path.join(d, 'vina'))
+        searches.append(os.path.join(d, 'vina.exe'))
+
+    for path in searches:
+        if os.path.isfile(path) and os.access(path, os.X_OK):
+            print(f"[Vina] Found at: {path}")
+            return path
+
+    # Fallback — let the OS raise FileNotFoundError at runtime as before
+    print("[Vina] WARNING: could not auto-locate 'vina'. "
+          "Set the VINA_PATH environment variable to the full path if docking fails.")
+    return 'vina'
+
+
+# Discover Vina once at module load time so every call uses the same path.
+VINA_EXEC = _find_vina_executable()
+
+def _env_int(name, default):
+    """Read a positive integer from the environment with a safe fallback."""
+    raw = os.getenv(name)
+    if raw is None:
+        return int(default)
+    try:
+        value = int(raw)
+        return value if value > 0 else int(default)
+    except (TypeError, ValueError):
+        return int(default)
+
+
+def _copy_or_link(src, dst):
+    """Prefer hard links on Linux; fall back to a regular copy when needed."""
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    try:
+        if os.path.exists(dst):
+            os.unlink(dst)
+        os.link(src, dst)
+    except Exception:
+        shutil.copy2(src, dst)
+
+
+def _ligand_cache_key(smiles):
+    """Stable cache key for a canonical ligand SMILES."""
+    return hashlib.sha1(smiles.encode('utf-8')).hexdigest()
+
+
+def _remove_file_with_retries(path, attempts=6, delay=0.15):
+    """Best-effort unlink that tolerates Windows releasing file handles late."""
+    if not path:
+        return False
+
+    for attempt in range(attempts):
+        try:
+            os.unlink(path)
+            return True
+        except FileNotFoundError:
+            return True
+        except (PermissionError, OSError):
+            gc.collect()
+            time.sleep(delay * (attempt + 1))
+
+    return False
+
+
+def _load_molecule_from_file(file_path):
+    """
+    Parse a ligand file into an RDKit Mol.
+
+    RDKit is tried first so scaffold preview and the main pipeline interpret the
+    uploaded ligand the same way on every machine. OpenBabel remains a fallback.
+    """
+    file_path = os.path.abspath(file_path)
+    suffix = Path(file_path).suffix.lower()
+    rdmol = None
+
+    try:
+        if suffix == '.sdf':
+            with open(file_path, 'rb') as handle:
+                supplier = Chem.ForwardSDMolSupplier(
+                    handle,
+                    removeHs=True,
+                    sanitize=True
+                )
+                for mol in supplier:
+                    if mol is not None:
+                        rdmol = Chem.Mol(mol)
+                        break
+        elif suffix == '.mol':
+            rdmol = Chem.MolFromMolFile(file_path, removeHs=True, sanitize=True)
+        elif suffix == '.pdb':
+            rdmol = Chem.MolFromPDBFile(file_path, removeHs=True, sanitize=True)
+    except Exception:
+        rdmol = None
+
+    if rdmol is not None:
+        gc.collect()
+        return rdmol
+
+    try:
+        ob_conversion = ob.OBConversion()
+        if not ob_conversion.SetInFormat(suffix.replace('.', '')):
+            return None
+
+        ob_conversion.SetOutFormat('smi')
+        ob_mol = ob.OBMol()
+        if not ob_conversion.ReadFile(ob_mol, file_path):
+            return None
+
+        raw_smiles = ob_conversion.WriteString(ob_mol).strip().split()
+        if not raw_smiles:
+            return None
+
+        return Chem.MolFromSmiles(raw_smiles[0])
+    except Exception:
+        return None
+    finally:
+        gc.collect()
+
+
+def _build_upload_path(upload_dir, role, filename, default_suffix):
+    """Create a stable, collision-free upload path inside one run's folder."""
+    cleaned = secure_filename(filename or '')
+    suffix = Path(cleaned).suffix.lower() or default_suffix
+    return os.path.join(upload_dir, f'{role}{suffix}')
+
+
+def _count_pipeline_ligands(results):
+    """
+    Prefer docked ligands, then converted ligands, then generated ligands.
+    This avoids misleading '0 ligands' when docking artifacts are absent but the
+    earlier steps succeeded.
+    """
+    docking_results = results.get('docking_results') or {}
+    total_docked = 0
+    for pocket_results in docking_results.values():
+        if isinstance(pocket_results, dict):
+            total_docked += int(pocket_results.get('total_docked', 0) or 0)
+    if total_docked:
+        return total_docked
+
+    pdbqt_jobs = ((results.get('pdbqt_results') or {}).get('jobs') or {})
+    total_converted = sum(
+        int((stats or {}).get('converted', 0) or 0)
+        for stats in pdbqt_jobs.values()
+        if isinstance(stats, dict)
+    )
+    if total_converted:
+        return total_converted
+
+    fragment_stats = results.get('fragment_stats') or {}
+    return sum(
+        int((stats or {}).get('generated_ligands', 0) or 0)
+        for stats in fragment_stats.values()
+        if isinstance(stats, dict)
+    )
 
 
 class ChainAProteinSelect(Select):
@@ -181,10 +424,11 @@ class EnzymeLigandProcessor:
                  substitution_jobs=None, interactive=True):
         self.interactive = interactive
         
-        # Set default fragment library if not provided
+        # Set default fragment library — looks next to the script so it works on any machine.
         if fragment_file is None:
-            _base = "/Users/deboleenaadhikary/Downloads/Fragment_lib/350_frag_sorted.csv"
-            _fallback = "/Users/deboleenaadhikary/Downloads/Fragment_lib/350_frag_cleaned.txt"
+            _script_dir = os.path.dirname(os.path.abspath(__file__)) if '__file__' in globals() else os.getcwd()
+            _base     = os.path.join(_script_dir, "350_frag_sorted.csv")
+            _fallback = os.path.join(_script_dir, "350_frag_cleaned.txt")
             fragment_file = _base if os.path.exists(_base) else _fallback
 
         # Collect all inputs upfront if interactive
@@ -226,6 +470,18 @@ class EnzymeLigandProcessor:
         self.chains_info = None
         self.removed_hetero = []
         self.removed_chains = []
+
+        # Web-safe screening / conversion settings
+        cpu_count = os.cpu_count() or 8
+        default_workers = max(1, min(6, cpu_count - 2))
+        self.total_conversion_workers = _env_int('ALOE_TOTAL_CONVERSION_WORKERS', default_workers)
+        self.shortlist_target_per_job = _env_int('ALOE_MAX_LIGANDS_PER_JOB', 750)
+        self.shortlist_trigger_per_job = _env_int(
+            'ALOE_SHORTLIST_TRIGGER',
+            self.shortlist_target_per_job
+        )
+        self.shortlist_rescue_per_bucket = _env_int('ALOE_SHORTLIST_RESCUE_PER_BUCKET', 2)
+        self._job_screening_context = {}
         
         if self.enzyme_file and self.molecule_file:
             self._validate_inputs()
@@ -281,13 +537,12 @@ class EnzymeLigandProcessor:
                     break
                 print("   ❌ Invalid choice. Enter 1 or 2.")
         
-        # 5. Fragment library - HARDCODED, no prompt
+        # 5. Fragment library — looks next to the script, works on any machine
         if fragment_file is None:
-            _base = "/Users/deboleenaadhikary/Downloads/Fragment_lib/350_frag_sorted.csv"
-            _fallback = "/Users/deboleenaadhikary/Downloads/Fragment_lib/350_frag_cleaned.txt"
+            _script_dir = os.path.dirname(os.path.abspath(__file__)) if '__file__' in globals() else os.getcwd()
+            _base     = os.path.join(_script_dir, "350_frag_sorted.csv")
+            _fallback = os.path.join(_script_dir, "350_frag_cleaned.txt")
             fragment_file = _base if os.path.exists(_base) else _fallback
-            fragment_file = _base if os.path.exists(_base) else _fallback
-            fragment_file = "/Users/deboleenaadhikary/Downloads/Fragment_lib/350_frag_cleaned.txt"
         
         # Set default output directory if not provided
         if output_dir is None:
@@ -378,29 +633,22 @@ class EnzymeLigandProcessor:
             raise ValueError(f"Molecule file must be .mol, .pdb, or .sdf (got {mol_ext})")
     
     def convert_molecule_to_smiles(self):
-        """Convert molecule to SMILES using OpenBabel."""
+        """Convert molecule to canonical SMILES with RDKit-first parsing."""
         print("\n" + "="*60)
         print("STEP 1: Converting Molecule to SMILES")
         print("="*60)
         
         file_ext = Path(self.molecule_file).suffix.lower().replace('.', '')
-        
-        obConversion = ob.OBConversion()
-        obConversion.SetInFormat(file_ext)
-        obConversion.SetOutFormat("smi")
-        
-        mol = ob.OBMol()
-        success = obConversion.ReadFile(mol, self.molecule_file)
-        
-        if not success:
+        rdmol = _load_molecule_from_file(self.molecule_file)
+
+        if rdmol is None:
             raise ValueError(f"Failed to read molecule file: {self.molecule_file}")
-        
-        raw_smiles = obConversion.WriteString(mol).strip()
-        self.original_smiles = raw_smiles.split()[0] if raw_smiles else ''
-        
-        formula = mol.GetFormula()
-        mol_weight = mol.GetMolWt()
-        num_atoms = mol.NumAtoms()
+
+        self.original_smiles = Chem.MolToSmiles(rdmol, isomericSmiles=True)
+
+        formula = rdMolDescriptors.CalcMolFormula(rdmol)
+        mol_weight = Descriptors.MolWt(rdmol)
+        num_atoms = rdmol.GetNumAtoms()
         
         print(f"✓ Molecule file: {self.molecule_file}")
         print(f"✓ Format: {file_ext.upper()}")
@@ -816,6 +1064,236 @@ class EnzymeLigandProcessor:
         sz = pocket.get('size_z', 20.0)
         return sx * sy * sz * 0.4
 
+    def _get_job_by_id(self, job_id):
+        """Return the in-memory SubstitutionJob object for a job id."""
+        for job in self.substitution_jobs:
+            if job.job_id == job_id:
+                return job
+        return None
+
+    def _prime_job_screening_context(self, job_id, remaining_volume=None):
+        """
+        Store scaffold-size context per job so shortlist scoring stays cheap.
+        The shortlist uses these values only as soft penalties, never as a
+        hard rejection rule.
+        """
+        ctx = dict(self._job_screening_context.get(job_id, {}))
+        if remaining_volume is not None:
+            ctx['remaining_volume'] = remaining_volume
+
+        if 'scaffold_heavy_atoms' not in ctx:
+            scaffold_smiles = self.scaffold_smiles
+            job = self._get_job_by_id(job_id)
+            if job and job.smiles_with_attachment:
+                scaffold_smiles = self._strip_dummy_atoms(job.smiles_with_attachment)
+            mol = Chem.MolFromSmiles(scaffold_smiles) if scaffold_smiles else None
+            ctx['scaffold_heavy_atoms'] = mol.GetNumHeavyAtoms() if mol else 0
+
+        self._job_screening_context[job_id] = ctx
+        return ctx
+
+    def _compute_ligand_screening_profile(self, job_id, ligand):
+        """
+        Compute cheap 2D descriptors for conservative shortlist scoring.
+        These signals bias the ranking; they do not hard-delete candidates.
+        """
+        mol = Chem.MolFromSmiles(ligand['smiles'])
+        if mol is None:
+            return None
+
+        canonical = Chem.MolToSmiles(mol, canonical=True, isomericSmiles=True)
+        mol = Chem.MolFromSmiles(canonical)
+        if mol is None:
+            return None
+
+        ctx = self._prime_job_screening_context(job_id)
+        mw = Descriptors.MolWt(mol)
+        heavy_atoms = mol.GetNumHeavyAtoms()
+        rot_bonds = Lipinski.NumRotatableBonds(mol)
+        ring_count = rdMolDescriptors.CalcNumRings(mol)
+        tpsa = rdMolDescriptors.CalcTPSA(mol)
+        logp = Crippen.MolLogP(mol)
+        frac_csp3 = rdMolDescriptors.CalcFractionCSP3(mol)
+        charge = sum(atom.GetFormalCharge() for atom in mol.GetAtoms())
+        fragment_mw = float(ligand.get('fragment_mw', 0.0) or 0.0)
+        added_heavy_atoms = max(0, heavy_atoms - ctx.get('scaffold_heavy_atoms', 0))
+        added_size_proxy = (added_heavy_atoms * 14.0) + (max(0, rot_bonds - 2) * 3.0)
+        remaining_volume = ctx.get('remaining_volume')
+        fit_ratio = (
+            added_size_proxy / remaining_volume
+            if remaining_volume and remaining_volume > 0
+            else None
+        )
+
+        score = 0.0
+        score += max(0, rot_bonds - 6) * 1.10
+        score += max(0, heavy_atoms - 44) * 0.35
+        score += max(0, mw - 525) * 0.02
+        score += max(0, fragment_mw - 250) * 0.03
+        score += max(0, abs(charge) - 1) * 1.50
+        score += max(0.0, tpsa - 140.0) * 0.02
+        if logp > 5.5:
+            score += (logp - 5.5) * 0.80
+        if logp < -1.0:
+            score += (-1.0 - logp) * 0.35
+        if fit_ratio is not None and fit_ratio > 1.1:
+            score += (fit_ratio - 1.1) * 4.0
+        score -= min(ring_count, 4) * 0.10
+        score -= min(frac_csp3, 0.7) * 0.40
+
+        try:
+            murcko = MurckoScaffold.MurckoScaffoldSmiles(mol=mol) or 'ACYCLIC'
+        except Exception:
+            murcko = 'ACYCLIC'
+
+        return {
+            'canonical_smiles': canonical,
+            'final_mw': round(mw, 3),
+            'heavy_atoms': heavy_atoms,
+            'rot_bonds': rot_bonds,
+            'ring_count': ring_count,
+            'tpsa': round(tpsa, 3),
+            'logp': round(logp, 3),
+            'frac_csp3': round(frac_csp3, 3),
+            'formal_charge': charge,
+            'fragment_mw': round(fragment_mw, 3),
+            'added_heavy_atoms': added_heavy_atoms,
+            'fit_ratio': round(fit_ratio, 3) if fit_ratio is not None else '',
+            'murcko_scaffold': murcko,
+            'charge_bucket': f"chg_{max(-2, min(2, charge))}",
+            'rot_bucket': f"rot_{min(rot_bonds // 3, 6)}",
+            'tpsa_bucket': f"tpsa_{int(tpsa // 25)}",
+            'logp_bucket': f"logp_{int(math.floor((logp + 2.0) / 1.5))}",
+            'frag_bucket': f"frag_{int(fragment_mw // 25)}",
+            'screen_score': round(score, 6),
+        }
+
+    def _write_shortlist_audit(self, job_id, selected_records, excluded_records, job_dir):
+        """Write a transparent audit trail for shortlist keep/drop decisions."""
+        fields = [
+            'selection_reason', 'screen_score', 'canonical_smiles', 'final_mw',
+            'fragment_mw', 'heavy_atoms', 'rot_bonds', 'ring_count', 'tpsa',
+            'logp', 'frac_csp3', 'formal_charge', 'added_heavy_atoms',
+            'fit_ratio', 'murcko_scaffold'
+        ]
+        for filename, records in (
+            ('shortlist_included.csv', selected_records),
+            ('shortlist_excluded.csv', excluded_records),
+        ):
+            path = os.path.join(job_dir, filename)
+            with open(path, 'w', newline='', encoding='utf-8') as fh:
+                writer = csv.DictWriter(fh, fieldnames=fields)
+                writer.writeheader()
+                for record in records:
+                    writer.writerow({field: record.get(field, '') for field in fields})
+
+    def _soft_shortlist_ligands(self, job_id, ligands, job_dir):
+        """
+        Conservative industrial shortlist.
+
+        Hard exclusions are limited to invalid/duplicate molecules handled
+        elsewhere. Size/flexibility/pocket-fit are used only to rank candidates,
+        and rescue buckets preserve chemical diversity so unusual chemotypes are
+        not silently discarded.
+        """
+        total = len(ligands)
+        target = min(total, self.shortlist_target_per_job)
+        trigger = max(target, self.shortlist_trigger_per_job)
+
+        profiled = []
+        profile_failed = []
+        for lig in ligands:
+            profile = self._compute_ligand_screening_profile(job_id, lig)
+            if profile is None:
+                rec = dict(lig)
+                rec['canonical_smiles'] = lig.get('smiles', '')
+                rec['selection_reason'] = 'profile_failed_rescue_candidate'
+                rec['screen_score'] = 9999.0
+                profile_failed.append(rec)
+                continue
+            rec = dict(lig)
+            rec.update(profile)
+            profiled.append(rec)
+
+        if total <= trigger or target >= total:
+            selected = profiled + profile_failed
+            for rec in selected:
+                rec['selection_reason'] = rec.get('selection_reason') or 'kept_all_below_threshold'
+            self._write_shortlist_audit(job_id, selected, [], job_dir)
+            return selected
+
+        sorted_records = sorted(
+            profiled,
+            key=lambda rec: (rec['screen_score'], rec['final_mw'], rec['canonical_smiles'])
+        )
+
+        selected = []
+        selected_keys = set()
+
+        def _select(record, reason):
+            key = record.get('canonical_smiles') or record.get('smiles')
+            if key in selected_keys or len(selected) >= target:
+                return False
+            record['selection_reason'] = reason
+            selected.append(record)
+            selected_keys.add(key)
+            return True
+
+        core_target = max(1, int(round(target * 0.75)))
+        for rec in sorted_records:
+            if len(selected) >= core_target:
+                break
+            _select(rec, 'overall_top_ranked')
+
+        group_fields = [
+            'murcko_scaffold', 'charge_bucket', 'rot_bucket',
+            'tpsa_bucket', 'logp_bucket', 'frag_bucket'
+        ]
+        for field in group_fields:
+            buckets = defaultdict(list)
+            for rec in sorted_records:
+                buckets[rec.get(field, '')].append(rec)
+
+            bucket_order = sorted(
+                buckets.keys(),
+                key=lambda bucket: buckets[bucket][0]['screen_score'] if buckets[bucket] else 9999.0
+            )
+            for bucket in bucket_order:
+                taken = 0
+                for rec in buckets[bucket]:
+                    if _select(rec, f"diversity_rescue:{field}={bucket}"):
+                        taken += 1
+                    if taken >= self.shortlist_rescue_per_bucket or len(selected) >= target:
+                        break
+                if len(selected) >= target:
+                    break
+            if len(selected) >= target:
+                break
+
+        if len(selected) < target and profile_failed:
+            rescue_budget = min(len(profile_failed), max(3, target // 20))
+            for rec in profile_failed[:rescue_budget]:
+                if len(selected) >= target:
+                    break
+                _select(rec, 'profile_failed_rescue')
+
+        if len(selected) < target:
+            for rec in sorted_records:
+                if len(selected) >= target:
+                    break
+                _select(rec, 'overall_fill')
+
+        excluded = []
+        for rec in sorted_records + profile_failed:
+            key = rec.get('canonical_smiles') or rec.get('smiles')
+            if key not in selected_keys:
+                rec = dict(rec)
+                rec['selection_reason'] = 'soft_shortlist_excluded'
+                excluded.append(rec)
+
+        self._write_shortlist_audit(job_id, selected, excluded, job_dir)
+        return selected
+
     # ── Sorted-CSV fragment library loader ───────────────────────────────────
     @staticmethod
     def _load_sorted_csv_fragments(csv_path, min_mw, max_mw):
@@ -985,6 +1463,7 @@ class EnzymeLigandProcessor:
             print(f"Processing Job {job.job_id}")
             print(f"{'-'*60}")
             print(f"  Scaffold : {job.smiles_with_attachment}")
+            self._prime_job_screening_context(job.job_id, remaining_volume=max_fragment_volume)
             min_mw, max_mw = job.mw_range
             print(f"  MW range : {min_mw:.0f} – {max_mw:.0f} Da")
 
@@ -1323,6 +1802,16 @@ class EnzymeLigandProcessor:
         ligands = unique_ligands
         # ─────────────────────────────────────────────────────────────────────
 
+        shortlisted = self._soft_shortlist_ligands(job_id, ligands, job_dir)
+        if len(shortlisted) < len(ligands):
+            print(
+                f"  ✓ Conservative shortlist kept {len(shortlisted):,} / {len(ligands):,} "
+                f"ligands for 3D conversion and docking"
+            )
+        else:
+            print(f"  ✓ Shortlist kept all {len(shortlisted):,} ligands")
+        ligands = shortlisted
+
         for i, ligand in enumerate(ligands, 1):
             filename = f'ligand_{i}.smi'
             filepath = os.path.join(job_dir, filename)
@@ -1333,6 +1822,14 @@ class EnzymeLigandProcessor:
                 f.write(f"# Fragment: {ligand['fragment_smiles']}\n")
                 f.write(f"# Fragment MW: {ligand['fragment_mw']:.2f}\n")
                 f.write(f"# Fragment Index: {ligand['fragment_index']}\n")
+                if 'screen_score' in ligand:
+                    f.write(f"# Screen Score: {ligand['screen_score']:.6f}\n")
+                if 'final_mw' in ligand:
+                    f.write(f"# Final MW: {ligand['final_mw']:.2f}\n")
+                if 'rot_bonds' in ligand:
+                    f.write(f"# Rotatable Bonds: {ligand['rot_bonds']}\n")
+                if 'selection_reason' in ligand:
+                    f.write(f"# Selection Reason: {ligand['selection_reason']}\n")
         
         print(f"  ✓ Saved {len(ligands)} .smi files")
     
@@ -1370,13 +1867,16 @@ class EnzymeLigandProcessor:
                 '-xh'   # Add hydrogens
             ]
             
-            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=60)
             
             print(f"✓ Enzyme converted successfully")
             print(f"  Saved to: {pdbqt_path}")
             
             return pdbqt_path
             
+        except subprocess.TimeoutExpired:
+            print(f"❌ OpenBabel conversion timed out after 60s")
+            return None
         except subprocess.CalledProcessError as e:
             print(f"❌ OpenBabel conversion failed: {e}")
             if e.stderr:
@@ -1645,8 +2145,11 @@ class EnzymeLigandProcessor:
 
         pdbqt_path = os.path.join(pdbqt_dir, f'{base_name}.pdbqt')
         cmd = ['obabel', sdf_path, '-O', pdbqt_path, '-xh', '--partialcharge', 'gasteiger']
-        subprocess.run(cmd, capture_output=True, text=True, check=True)
-        return True
+        try:
+            subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=30)
+            return True
+        except (subprocess.TimeoutExpired, subprocess.CalledProcessError, Exception):
+            return False
 
     def _try_rdkit_3d_generation(self, smiles, base_name, sdf_dir, pdbqt_dir):
         """Strategy 1: ETKDGv3 + force-field cleanup for generated ligands."""
@@ -1705,7 +2208,7 @@ class EnzymeLigandProcessor:
                 '--partialcharge', 'gasteiger'
             ]
             
-            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=45)
             
             # Verify the output file exists and has content
             if os.path.exists(pdbqt_path) and os.path.getsize(pdbqt_path) > 0:
@@ -1713,7 +2216,7 @@ class EnzymeLigandProcessor:
             
             return False
             
-        except Exception:
+        except (subprocess.TimeoutExpired, subprocess.CalledProcessError, Exception):
             return False
     
     def _try_unsanitized_parsing(self, smiles, base_name, sdf_dir, pdbqt_dir):
@@ -1772,11 +2275,11 @@ class EnzymeLigandProcessor:
             
             pdbqt_path = os.path.join(pdbqt_dir, f'{base_name}.pdbqt')
             cmd = ['obabel', sdf_path, '-O', pdbqt_path, '-xh', '--partialcharge', 'gasteiger']
-            subprocess.run(cmd, capture_output=True, text=True, check=True)
+            subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=30)
             
             return True
             
-        except Exception:
+        except (subprocess.TimeoutExpired, subprocess.CalledProcessError, Exception):
             return False
     
     
@@ -1818,7 +2321,195 @@ class EnzymeLigandProcessor:
                 
         except:
             pass  # Don't fail if diagnostics can't be saved
-    
+
+    def _load_job_conversion_candidates(self, job_id):
+        """Load shortlisted `.smi` ligands for one job with their metadata."""
+        job_ligands_dir = os.path.join(self.output_dir, f'job{job_id}_ligands')
+        sdf_dir = os.path.join(job_ligands_dir, 'sdf_ligands')
+        pdbqt_dir = os.path.join(job_ligands_dir, 'pdbqt_ligands')
+        os.makedirs(sdf_dir, exist_ok=True)
+        os.makedirs(pdbqt_dir, exist_ok=True)
+
+        candidates = []
+        smi_files = sorted(
+            f for f in os.listdir(job_ligands_dir)
+            if f.endswith('.smi')
+        ) if os.path.exists(job_ligands_dir) else []
+
+        for smi_file in smi_files:
+            smi_path = os.path.join(job_ligands_dir, smi_file)
+            with open(smi_path, 'r', encoding='utf-8') as fh:
+                lines = [line.rstrip('\n') for line in fh]
+            if not lines:
+                continue
+
+            smiles = lines[0].strip()
+            if not smiles:
+                continue
+
+            meta = {}
+            for line in lines[1:]:
+                if not line.startswith('#'):
+                    continue
+                key, _, value = line[1:].partition(':')
+                meta[key.strip()] = value.strip()
+
+            try:
+                mol = Chem.MolFromSmiles(smiles)
+                canonical = Chem.MolToSmiles(mol, canonical=True, isomericSmiles=True) if mol else smiles
+            except Exception:
+                canonical = smiles
+
+            cache_key = _ligand_cache_key(canonical)
+            base_name = smi_file.replace('.smi', '')
+            candidates.append({
+                'job_id': job_id,
+                'base_name': base_name,
+                'smi_path': smi_path,
+                'smiles': canonical,
+                'job_dir': job_ligands_dir,
+                'sdf_dir': sdf_dir,
+                'pdbqt_dir': pdbqt_dir,
+                'cache_key': cache_key,
+                'fragment_mw': meta.get('Fragment MW', ''),
+                'selection_reason': meta.get('Selection Reason', ''),
+            })
+
+        return candidates
+
+    def _cache_paths_for_key(self, cache_key):
+        """Return run-local cache paths for a unique ligand."""
+        cache_root = os.path.join(self.output_dir, 'conversion_cache')
+        cache_smi_dir = os.path.join(cache_root, 'smi')
+        cache_sdf_dir = os.path.join(cache_root, 'sdf')
+        cache_pdbqt_dir = os.path.join(cache_root, 'pdbqt')
+        os.makedirs(cache_smi_dir, exist_ok=True)
+        os.makedirs(cache_sdf_dir, exist_ok=True)
+        os.makedirs(cache_pdbqt_dir, exist_ok=True)
+        return {
+            'cache_root': cache_root,
+            'cache_smi': os.path.join(cache_smi_dir, f'{cache_key}.smi'),
+            'cache_sdf_dir': cache_sdf_dir,
+            'cache_pdbqt_dir': cache_pdbqt_dir,
+            'cache_sdf': os.path.join(cache_sdf_dir, f'{cache_key}.sdf'),
+            'cache_pdbqt': os.path.join(cache_pdbqt_dir, f'{cache_key}.pdbqt'),
+        }
+
+    def _allocate_conversion_workers(self, active_job_ids):
+        """Allocate the shared ligand-conversion workers dynamically by job count."""
+        active_job_ids = list(active_job_ids)
+        if not active_job_ids:
+            return {}
+
+        available = max(1, min(self.total_conversion_workers, (os.cpu_count() or 8) - 2))
+        active_job_ids.sort()
+        base = max(1, available // len(active_job_ids))
+        extra = available % len(active_job_ids)
+
+        allocation = {}
+        for idx, job_id in enumerate(active_job_ids):
+            allocation[job_id] = base + (1 if idx < extra else 0)
+        return allocation
+
+    def _convert_unique_candidate_to_cache(self, task):
+        """
+        Convert one unique ligand SMILES to cached SDF/PDBQT files.
+        The caller handles job-specific fan-out afterwards.
+        """
+        start = time.time()
+        smiles = task['smiles']
+        cache_key = task['cache_key']
+        cache_smi = task['cache_smi']
+        cache_sdf = task['cache_sdf']
+        cache_pdbqt = task['cache_pdbqt']
+        cache_sdf_dir = task['cache_sdf_dir']
+        cache_pdbqt_dir = task['cache_pdbqt_dir']
+
+        try:
+            with open(cache_smi, 'w', encoding='utf-8') as fh:
+                fh.write(smiles + '\n')
+        except Exception as exc:
+            return {
+                'success': False,
+                'error': f'Could not write cache SMI: {exc}',
+                'strategy': 'write_failed',
+                'elapsed_s': time.time() - start,
+            }
+
+        for path in (cache_sdf, cache_pdbqt):
+            if os.path.exists(path):
+                _remove_file_with_retries(path)
+
+        strategies = [
+            ('rdkit_mmff', lambda: self._try_rdkit_3d_generation(smiles, cache_key, cache_sdf_dir, cache_pdbqt_dir)),
+            ('rdkit_etkdg', lambda: self._try_etkdg_generation(smiles, cache_key, cache_sdf_dir, cache_pdbqt_dir)),
+            ('rdkit_basic', lambda: self._try_basic_3d_generation(smiles, cache_key, cache_sdf_dir, cache_pdbqt_dir)),
+            ('openbabel_direct', lambda: self._try_openbabel_direct(cache_smi, cache_key, cache_pdbqt_dir)),
+            ('unsanitized_fallback', lambda: self._try_unsanitized_parsing(smiles, cache_key, cache_sdf_dir, cache_pdbqt_dir)),
+        ]
+
+        last_error = 'All 3D generation strategies failed'
+        for strategy_name, runner in strategies:
+            try:
+                if runner():
+                    if os.path.exists(cache_pdbqt) and os.path.getsize(cache_pdbqt) > 0:
+                        if not os.path.exists(cache_sdf) or os.path.getsize(cache_sdf) == 0:
+                            try:
+                                fallback_mol = Chem.MolFromSmiles(smiles)
+                                if fallback_mol is not None:
+                                    writer = Chem.SDWriter(cache_sdf)
+                                    writer.write(fallback_mol)
+                                    writer.close()
+                            except Exception:
+                                pass
+                        return {
+                            'success': True,
+                            'strategy': strategy_name,
+                            'elapsed_s': time.time() - start,
+                        }
+                    last_error = f'{strategy_name} returned success without a valid PDBQT'
+            except Exception as exc:
+                last_error = f'{strategy_name} failed: {exc}'
+
+        for path in (cache_sdf, cache_pdbqt):
+            if os.path.exists(path):
+                _remove_file_with_retries(path)
+
+        return {
+            'success': False,
+            'error': last_error,
+            'strategy': 'failed',
+            'elapsed_s': time.time() - start,
+        }
+
+    def _materialize_cached_outputs(self, task):
+        """Fan one cached conversion result out to all job-specific output paths."""
+        for target in task['targets']:
+            dst_sdf = os.path.join(target['sdf_dir'], f"{target['base_name']}.sdf")
+            dst_pdbqt = os.path.join(target['pdbqt_dir'], f"{target['base_name']}.pdbqt")
+            if os.path.exists(task['cache_sdf']) and os.path.getsize(task['cache_sdf']) > 0:
+                _copy_or_link(task['cache_sdf'], dst_sdf)
+            else:
+                fallback_mol = Chem.MolFromSmiles(target['smiles'])
+                if fallback_mol is not None:
+                    writer = Chem.SDWriter(dst_sdf)
+                    writer.write(fallback_mol)
+                    writer.close()
+            _copy_or_link(task['cache_pdbqt'], dst_pdbqt)
+
+    def _apply_conversion_failure(self, task, results, reason):
+        """Record a failed unique conversion against every job target that needs it."""
+        for target in task['targets']:
+            job_stats = results['jobs'][target['job_id']]
+            job_stats['failed'] += 1
+            job_stats['failed_names'].append(target['base_name'])
+            self._save_diagnostic_info(
+                target['smiles'],
+                target['base_name'],
+                target['job_dir'],
+                reason=reason
+            )
+
     # ==================================================================
     # STEP 9: Binding Pocket Detection — P2Rank (primary) / fpocket (fallback)
     # ==================================================================
@@ -1865,12 +2556,17 @@ class EnzymeLigandProcessor:
         Returns the full path to prank, or None.
         """
         import glob
+        import shutil
+
+        exe_names = ['prank', 'prank.bat', 'prank.exe']
+        path_names = ['prank', 'prank.bat', 'prank.exe', 'p2rank', 'p2rank.bat', 'p2rank.exe', 'p2rank.sh']
 
         # Already found previously in this session
         if hasattr(self, '_p2rank_dir') and self._p2rank_dir:
-            exe = os.path.join(self._p2rank_dir, 'prank')
-            if os.path.isfile(exe):
-                return exe
+            for exe_name in exe_names:
+                exe = os.path.join(self._p2rank_dir, exe_name)
+                if os.path.isfile(exe):
+                    return exe
 
         # Search common locations for p2rank_* directories
         search_roots = [
@@ -1881,19 +2577,25 @@ class EnzymeLigandProcessor:
         ]
         for root in search_roots:
             for d in glob.glob(os.path.join(root, 'p2rank*')):
-                exe = os.path.join(d, 'prank')
-                if os.path.isfile(exe):
-                    self._p2rank_dir = d
-                    return exe
+                for exe_name in exe_names:
+                    exe = os.path.join(d, exe_name)
+                    if os.path.isfile(exe):
+                        self._p2rank_dir = d
+                        return exe
 
         # System PATH
-        for name in ['prank', 'p2rank', 'p2rank.sh']:
+        for name in path_names:
+            exe = shutil.which(name)
+            if not exe:
+                continue
             try:
-                r = subprocess.run([name, '--version'],
-                                   capture_output=True, text=True, timeout=10)
-                if r.returncode == 0 or 'p2rank' in (r.stdout+r.stderr).lower():
-                    self._p2rank_dir = None
-                    return name
+                probe_cmd = [exe, '--version']
+                if os.name == 'nt' and exe.lower().endswith(('.bat', '.cmd')):
+                    probe_cmd = ['cmd', '/c', exe, '--version']
+                r = subprocess.run(probe_cmd, capture_output=True, text=True, timeout=10)
+                if r.returncode == 0 or 'p2rank' in (r.stdout + r.stderr).lower():
+                    self._p2rank_dir = os.path.dirname(exe)
+                    return exe
             except Exception:
                 pass
 
@@ -1903,11 +2605,12 @@ class EnzymeLigandProcessor:
             print("  Enter the full path to your p2rank directory")
             print("  (e.g. /Users/you/Downloads/p2rank_2.5.1)")
             path = input("  Path: ").strip()
-            exe  = os.path.join(path, 'prank')
-            if os.path.isfile(exe):
-                self._p2rank_dir = path
-                return exe
-            print(f"  ❌ 'prank' not found at {exe}")
+            for exe_name in exe_names:
+                exe = os.path.join(path, exe_name)
+                if os.path.isfile(exe):
+                    self._p2rank_dir = path
+                    return exe
+            print(f"  ❌ P2Rank launcher not found in {path}")
 
         return None
 
@@ -1959,17 +2662,18 @@ class EnzymeLigandProcessor:
         else:
             print("  ⚠️  Java 17 not found in Homebrew paths — using system Java")
 
-        # ── Copy PDB into p2rank directory (mirrors manual workflow) ──
-        pdb_in_p2rank = os.path.join(p2rank_dir, 'enzyme_apo.pdb')
-        shutil.copy(self.enzyme_apo_file, pdb_in_p2rank)
-
-        # Output goes into Downloads/p2rank_results/
+        # Keep all run artifacts inside this pipeline's output folder so repeated
+        # runs do not overwrite files inside the shared P2Rank installation.
         out_dir = os.path.join(self.output_dir, 'p2rank_results')
         os.makedirs(out_dir, exist_ok=True)
+        pdb_for_p2rank = os.path.join(out_dir, 'enzyme_apo_for_p2rank.pdb')
+        shutil.copy(self.enzyme_apo_file, pdb_for_p2rank)
 
         # ── Run: ./prank predict -f ./enzyme_apo.pdb -o <out_dir> ────
         # Use absolute exe path, cwd=p2rank_dir so lib/ and distlib/ are found
-        cmd = [exe, 'predict', '-f', pdb_in_p2rank, '-o', out_dir]
+        cmd = [exe, 'predict', '-f', pdb_for_p2rank, '-o', out_dir]
+        if os.name == 'nt' and exe.lower().endswith(('.bat', '.cmd')):
+            cmd = ['cmd', '/c', exe, 'predict', '-f', pdb_for_p2rank, '-o', out_dir]
         print(f"  Command: {' '.join(cmd)}")
         print(f"  Working dir: {p2rank_dir}")
 
@@ -2420,7 +3124,39 @@ class EnzymeLigandProcessor:
         return best
 
 
-    def run_autodock_vina_docking(self, pockets, pdbqt_results):
+    def _count_total_docking_runs(self, selected_pockets, pdbqt_results):
+        """Count ligand-pocket docking tasks for progress reporting."""
+        if not selected_pockets:
+            return 0
+
+        ligand_total = 0
+        for job_id, job_stats in pdbqt_results.get('jobs', {}).items():
+            if job_stats.get('converted', 0) == 0:
+                continue
+
+            pdbqt_dir = os.path.join(self.output_dir, f'job{job_id}_ligands', 'pdbqt_ligands')
+            if not os.path.exists(pdbqt_dir):
+                continue
+
+            ligand_total += len([f for f in os.listdir(pdbqt_dir) if f.endswith('.pdbqt')])
+
+        return ligand_total * len(selected_pockets)
+
+    @staticmethod
+    def _report_docking_progress(progress_cb, progress_start, progress_end, completed, total, stage_detail=''):
+        """Emit progressive docking status to the web UI."""
+        if not callable(progress_cb) or total <= 0:
+            return
+
+        span = max(1, progress_end - progress_start)
+        pct = progress_start + ((completed / total) * span)
+        label = 'Running molecular docking…'
+        if stage_detail:
+            label = f"{label} ({stage_detail})"
+        progress_cb(int(round(min(progress_end, pct))), label)
+
+    def run_autodock_vina_docking(self, pockets, pdbqt_results, progress_cb=None,
+                                  progress_start=58, progress_end=92):
         """Run AutoDock Vina for all ligands. Auto-falls back to blind docking."""
         print("\n" + "="*60)
         print("STEP 10: AutoDock Vina Molecular Docking")
@@ -2456,8 +3192,20 @@ class EnzymeLigandProcessor:
             if not selected_pockets:
                 return None
 
+        total_runs = self._count_total_docking_runs(selected_pockets, pdbqt_results)
+        progress_state = {'completed': 0, 'total': total_runs}
+        self._report_docking_progress(
+            progress_cb,
+            progress_start,
+            progress_end,
+            progress_state['completed'],
+            progress_state['total'],
+            f"0/{progress_state['total']} ligand-pocket runs"
+        )
+
         docking_results = {}
-        for pocket in selected_pockets:
+        pocket_total = len(selected_pockets)
+        for pocket_index, pocket in enumerate(selected_pockets, 1):
             print(f"\n{'='*60}")
             label = 'BLIND' if blind else f"Pocket {pocket['id']}"
             print(f"Docking at {label}: {pocket.get('name','')}")
@@ -2467,18 +3215,41 @@ class EnzymeLigandProcessor:
                   f"{int(pocket['size_y'])} × {int(pocket['size_z'])} Å")
             print(f"{'='*60}")
 
-            pocket_results = self._dock_at_pocket(pocket, pdbqt_results, blind=blind)
+            pocket_results = self._dock_at_pocket(
+                pocket,
+                pdbqt_results,
+                blind=blind,
+                progress_cb=progress_cb,
+                progress_start=progress_start,
+                progress_end=progress_end,
+                progress_state=progress_state,
+                pocket_index=pocket_index,
+                pocket_total=pocket_total
+            )
             docking_results[pocket['id']] = pocket_results
 
+        self._report_docking_progress(
+            progress_cb,
+            progress_start,
+            progress_end,
+            progress_state['total'],
+            progress_state['total'],
+            'complete'
+        )
         self._display_docking_summary(docking_results)
         return docking_results
 
     def _check_vina_installation(self):
-        """Check if AutoDock Vina is on PATH."""
+        """Check if AutoDock Vina is available (uses VINA_EXEC discovered at startup)."""
         try:
-            subprocess.run(['vina', '--version'],
-                           capture_output=True, text=True, timeout=5)
+            result = subprocess.run([VINA_EXEC, '--version'],
+                                    capture_output=True, text=True, timeout=5)
+            print(f"  ✓ Vina found: {VINA_EXEC}")
             return True
+        except FileNotFoundError:
+            print(f"  ❌ Vina not found at: {VINA_EXEC}")
+            print(f"     Set VINA_PATH=/full/path/to/vina before starting the server.")
+            return False
         except Exception:
             return False
 
@@ -2494,7 +3265,9 @@ class EnzymeLigandProcessor:
         print(f"\n  → Docking at all {len(pockets)} pocket(s) to find best binding site")
         return pockets
 
-    def _dock_at_pocket(self, pocket, pdbqt_results, blind=False):
+    def _dock_at_pocket(self, pocket, pdbqt_results, blind=False, progress_cb=None,
+                        progress_start=58, progress_end=92, progress_state=None,
+                        pocket_index=None, pocket_total=None):
         """Dock all ligands at one pocket, writing a config.txt per ligand."""
         enzyme_pdbqt = pdbqt_results['enzyme_pdbqt']
         pocket_dir   = os.path.join(self.output_dir,
@@ -2577,6 +3350,25 @@ class EnzymeLigandProcessor:
                             print(f"  (full details in {ligand_name}_error.txt)")
                             print(f"  ────────────────\n")
                         first_err_shown = True
+
+                if progress_state and progress_state.get('total', 0) > 0:
+                    progress_state['completed'] = min(
+                        progress_state['total'],
+                        progress_state.get('completed', 0) + 1
+                    )
+                    completed = progress_state['completed']
+                    total = progress_state['total']
+                    detail = f"{completed}/{total} ligand-pocket runs"
+                    if pocket_index and pocket_total:
+                        detail = f"Pocket {pocket_index}/{pocket_total}, {detail}"
+                    self._report_docking_progress(
+                        progress_cb,
+                        progress_start,
+                        progress_end,
+                        completed,
+                        total,
+                        detail
+                    )
 
             if vina_broken:
                 break
@@ -2727,7 +3519,7 @@ class EnzymeLigandProcessor:
                 print()
 
             # vina --config only — no --log (unsupported in v1.2.5)
-            cmd = ['vina', '--config', config_path]
+            cmd = [VINA_EXEC, '--config', config_path]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
 
             # Save stdout+stderr as our log file (replaces --log)
@@ -3333,7 +4125,7 @@ class EnzymeLigandProcessor:
         
         return {'scripts_generated': True, 'script_dir': script_dir}
     
-    def convert_all_to_pdbqt(self):
+    def convert_all_to_pdbqt(self, progress_cb=None, progress_start=45, progress_end=58):
         """
         Convert enzyme and all ligands to PDBQT format.
         
@@ -3354,15 +4146,148 @@ class EnzymeLigandProcessor:
         enzyme_pdbqt = self.convert_enzyme_to_pdbqt()
         results['enzyme_pdbqt'] = enzyme_pdbqt
         
-        # Convert ligands for each job
+        def _report_progress(completed, total, stage_label='Converting to PDBQT…'):
+            if not callable(progress_cb) or total <= 0:
+                return
+            span = max(1, progress_end - progress_start)
+            pct = progress_start + ((completed / total) * span)
+            progress_cb(int(round(min(progress_end, pct))), f"{stage_label} ({completed}/{total} ligands ready)")
+
+        # Convert ligands for each job using a shared dynamic worker pool.
         if self.substitution_jobs:
             print("\n" + "="*60)
             print("Converting Ligands to PDBQT")
             print("="*60)
-            
+
+            total_targets = 0
+            unique_tasks = {}
+
             for job in self.substitution_jobs:
-                job_results = self.convert_ligands_to_pdbqt(job.job_id)
-                results['jobs'][job.job_id] = job_results
+                job_candidates = self._load_job_conversion_candidates(job.job_id)
+                results['jobs'][job.job_id] = {
+                    'converted': 0,
+                    'failed': 0,
+                    'skipped': 0,
+                    'total': len(job_candidates),
+                    'failed_names': [],
+                    'skipped_names': [],
+                    'fresh_converted': 0,
+                    'cache_reused': 0,
+                }
+
+                if not job_candidates:
+                    continue
+
+                print(f"  Job {job.job_id}: {len(job_candidates):,} shortlisted ligands queued")
+                total_targets += len(job_candidates)
+
+                for candidate in job_candidates:
+                    cache_paths = self._cache_paths_for_key(candidate['cache_key'])
+                    candidate.update(cache_paths)
+
+                    task = unique_tasks.get(candidate['cache_key'])
+                    if task is None:
+                        task = {
+                            'cache_key': candidate['cache_key'],
+                            'smiles': candidate['smiles'],
+                            'owner_job_id': candidate['job_id'],
+                            'targets': [],
+                        }
+                        task.update(cache_paths)
+                        unique_tasks[candidate['cache_key']] = task
+                    task['targets'].append(candidate)
+
+            if total_targets == 0:
+                print("  No shortlisted ligand files found")
+            else:
+                print(f"\n  Total shortlisted ligands: {total_targets:,}")
+                print(f"  Unique ligand chemotypes for conversion: {len(unique_tasks):,}")
+
+                completed_targets = 0
+                owner_queues = defaultdict(deque)
+                cache_hits = 0
+
+                def _record_success(task, strategy, cached_only=False):
+                    self._materialize_cached_outputs(task)
+                    for idx, target in enumerate(task['targets']):
+                        job_stats = results['jobs'][target['job_id']]
+                        job_stats['converted'] += 1
+                        if cached_only or idx > 0 or target['job_id'] != task['owner_job_id']:
+                            job_stats['cache_reused'] += 1
+                        else:
+                            job_stats['fresh_converted'] += 1
+
+                for task in unique_tasks.values():
+                    if (
+                        os.path.exists(task['cache_sdf']) and os.path.getsize(task['cache_sdf']) > 0
+                        and os.path.exists(task['cache_pdbqt']) and os.path.getsize(task['cache_pdbqt']) > 0
+                    ):
+                        _record_success(task, 'cache_hit', cached_only=True)
+                        completed_targets += len(task['targets'])
+                        cache_hits += len(task['targets'])
+                    else:
+                        owner_queues[task['owner_job_id']].append(task)
+
+                active_owner_jobs = [job_id for job_id, queue in owner_queues.items() if queue]
+                worker_alloc = self._allocate_conversion_workers(active_owner_jobs)
+
+                if worker_alloc:
+                    alloc_text = ', '.join(
+                        f"Job {job_id}: {workers} worker{'s' if workers != 1 else ''}"
+                        for job_id, workers in sorted(worker_alloc.items())
+                    )
+                    print(f"  Dynamic worker allocation: {alloc_text}")
+                if cache_hits:
+                    print(f"  Immediate cache reuses: {cache_hits}")
+
+                _report_progress(completed_targets, total_targets)
+
+                if worker_alloc:
+                    in_flight = defaultdict(int)
+                    future_to_task = {}
+
+                    def _submit(job_id, executor):
+                        while in_flight[job_id] < worker_alloc[job_id] and owner_queues[job_id]:
+                            task = owner_queues[job_id].popleft()
+                            future = executor.submit(self._convert_unique_candidate_to_cache, task)
+                            future_to_task[future] = task
+                            in_flight[job_id] += 1
+
+                    with ThreadPoolExecutor(max_workers=sum(worker_alloc.values())) as executor:
+                        for job_id in sorted(worker_alloc):
+                            _submit(job_id, executor)
+
+                        while future_to_task:
+                            done, _ = wait(list(future_to_task.keys()), return_when=FIRST_COMPLETED)
+                            for future in done:
+                                task = future_to_task.pop(future)
+                                owner_job_id = task['owner_job_id']
+                                in_flight[owner_job_id] -= 1
+
+                                try:
+                                    result = future.result()
+                                except Exception as exc:
+                                    result = {
+                                        'success': False,
+                                        'error': f'Unhandled worker exception: {exc}',
+                                        'strategy': 'worker_exception'
+                                    }
+
+                                if result.get('success'):
+                                    _record_success(task, result.get('strategy'))
+                                else:
+                                    self._apply_conversion_failure(
+                                        task,
+                                        results,
+                                        result.get('error', 'Unknown conversion failure')
+                                    )
+
+                                completed_targets += len(task['targets'])
+                                _report_progress(completed_targets, total_targets)
+                                _submit(owner_job_id, executor)
+
+                if callable(progress_cb) and total_targets > 0:
+                    progress_cb(progress_end, 'Converting to PDBQT… complete')
         
         # Summary
         print("\n" + "="*60)
@@ -3385,8 +4310,12 @@ class EnzymeLigandProcessor:
                 converted = stats.get('converted', 0)
                 total = stats.get('total', 0)
                 status_parts = [f"{converted}/{total} ligands"]
+                if stats.get('fresh_converted', 0) > 0:
+                    status_parts.append(f"{stats['fresh_converted']} fresh")
                 if stats.get('skipped', 0) > 0:
                     status_parts.append(f"{stats['skipped']} skipped")
+                if stats.get('cache_reused', 0) > 0:
+                    status_parts.append(f"{stats['cache_reused']} cache reuses")
                 print(f"  Job {job_id}: {', '.join(status_parts)}")
                 
                 failed_names = stats.get('failed_names') or []
@@ -3441,7 +4370,7 @@ class EnzymeLigandProcessor:
         
         # Check if vina is available
         try:
-            subprocess.run(['vina', '--help'], capture_output=True, check=True)
+            subprocess.run([VINA_EXEC, '--help'], capture_output=True, check=True)
         except (subprocess.CalledProcessError, FileNotFoundError):
             print("❌ AutoDock Vina not found. Install with:")
             print("   conda install -c conda-forge autodock-vina")
@@ -3515,7 +4444,7 @@ class EnzymeLigandProcessor:
             try:
                 # Run AutoDock Vina
                 cmd = [
-                    'vina',
+                    VINA_EXEC,
                     '--receptor', enzyme_pdbqt,
                     '--ligand', ligand_path,
                     '--center_x', str(pocket['center_x']),
@@ -3815,7 +4744,11 @@ class EnzymeLigandProcessor:
         pdbqt_results = {}
         if self.enzyme_apo_file or fragment_stats:
             _rpt(45, 'Converting to PDBQT…')
-            pdbqt_results = self.convert_all_to_pdbqt()
+            pdbqt_results = self.convert_all_to_pdbqt(
+                progress_cb=progress_cb,
+                progress_start=45,
+                progress_end=58
+            )
 
         # Step 9: Molecular docking
         docking_results = {}
@@ -3825,7 +4758,13 @@ class EnzymeLigandProcessor:
             if not pockets:
                 pockets = self.detect_binding_pockets()
 
-            docking_results = self.run_autodock_vina_docking(pockets, pdbqt_results)
+            docking_results = self.run_autodock_vina_docking(
+                pockets,
+                pdbqt_results,
+                progress_cb=progress_cb,
+                progress_start=58,
+                progress_end=92
+            )
 
         # Step 10: CSV + ZIP generation
         results_csv = None
@@ -3962,8 +4901,184 @@ def main():
 app = Flask(__name__, template_folder='.')
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = os.path.join(SCRIPT_DIR, 'enzyme_processor_results')
-UPLOADS_DIR = os.path.join(OUTPUT_DIR, 'uploads')
 RUNTIME_LOG = os.path.join(OUTPUT_DIR, 'backend_runtime.log')
+AUTH_USERS_PATH = os.path.join(SCRIPT_DIR, 'aloe_users.json')
+AUTH_HISTORY_PATH = os.path.join(SCRIPT_DIR, 'aloe_history.json')
+AUTH_SECRET_PATH = os.path.join(SCRIPT_DIR, 'aloe_secret.key')
+AUTH_HISTORY_TTL_MS = 48 * 60 * 60 * 1000
+AUTH_HISTORY_LIMIT = 50
+MAX_JOB_LOG_LINES = 800
+_ANSI_ESCAPE_RE = re.compile(r'\x1b\[[0-9;]*[A-Za-z]')
+_auth_lock = threading.Lock()
+
+
+def _read_json_file(path, default):
+    try:
+        with open(path, 'r', encoding='utf-8') as fh:
+            return json.load(fh)
+    except FileNotFoundError:
+        return default
+    except Exception:
+        return default
+
+
+def _write_json_file(path, payload):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tmp_path = f"{path}.tmp"
+    with open(tmp_path, 'w', encoding='utf-8') as fh:
+        json.dump(payload, fh, ensure_ascii=False, indent=2, sort_keys=True)
+    os.replace(tmp_path, path)
+
+
+def _get_or_create_secret_key():
+    env_secret = os.getenv('ALOE_SECRET_KEY', '').strip()
+    if env_secret:
+        return env_secret
+
+    try:
+        with open(AUTH_SECRET_PATH, 'r', encoding='utf-8') as fh:
+            secret = fh.read().strip()
+            if secret:
+                return secret
+    except FileNotFoundError:
+        pass
+    except Exception:
+        pass
+
+    secret = secrets.token_hex(32)
+    os.makedirs(os.path.dirname(AUTH_SECRET_PATH), exist_ok=True)
+    with open(AUTH_SECRET_PATH, 'w', encoding='utf-8') as fh:
+        fh.write(secret)
+    return secret
+
+
+app.config['SECRET_KEY'] = _get_or_create_secret_key()
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
+
+
+def _load_user_store():
+    data = _read_json_file(AUTH_USERS_PATH, {})
+    return data if isinstance(data, dict) else {}
+
+
+def _save_user_store(users):
+    _write_json_file(AUTH_USERS_PATH, users)
+
+
+def _load_history_store():
+    data = _read_json_file(AUTH_HISTORY_PATH, {})
+    return data if isinstance(data, dict) else {}
+
+
+def _save_history_store(history):
+    _write_json_file(AUTH_HISTORY_PATH, history)
+
+
+def _coerce_timestamp_ms(value):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _prune_history_entries(entries):
+    cutoff = int(time.time() * 1000) - AUTH_HISTORY_TTL_MS
+    fresh = []
+    for entry in entries or []:
+        if not isinstance(entry, dict):
+            continue
+        ts = _coerce_timestamp_ms(entry.get('ts'))
+        if ts is None or ts < cutoff:
+            continue
+        cleaned = dict(entry)
+        cleaned['ts'] = ts
+        cleaned.pop('username', None)
+        fresh.append(cleaned)
+
+    fresh.sort(key=lambda item: item.get('ts', 0), reverse=True)
+    return fresh[:AUTH_HISTORY_LIMIT]
+
+
+def _history_entry_key(entry):
+    payload = json.dumps(entry, sort_keys=True, separators=(',', ':'))
+    return hashlib.sha1(payload.encode('utf-8')).hexdigest()
+
+
+def _merge_history_entries(existing, incoming):
+    merged = []
+    seen = set()
+
+    for entry in _prune_history_entries(existing) + _prune_history_entries(incoming):
+        key = _history_entry_key(entry)
+        if key in seen:
+            continue
+        seen.add(key)
+        merged.append(entry)
+
+    merged.sort(key=lambda item: item.get('ts', 0), reverse=True)
+    return merged[:AUTH_HISTORY_LIMIT]
+
+
+def _current_user_payload():
+    username = session.get('username')
+    if not username:
+        return None
+
+    users = _load_user_store()
+    user = users.get(username)
+    if not isinstance(user, dict):
+        session.clear()
+        return None
+
+    return {
+        'username': username,
+        'name': user.get('name') or username,
+    }
+
+
+def _decode_legacy_password(encoded_password):
+    if not isinstance(encoded_password, str) or not encoded_password:
+        return None
+    try:
+        raw = base64.b64decode(encoded_password.encode('ascii'))
+        return raw.decode('latin-1')
+    except Exception:
+        return None
+
+
+def _require_authenticated_username():
+    user = _current_user_payload()
+    if not user:
+        return None, (jsonify({'success': False, 'error': 'Please sign in first.'}), 401)
+    return user['username'], None
+
+
+def _plain_log_text(message):
+    """Normalize ANSI-colored log output before storing or filtering it."""
+    return _ANSI_ESCAPE_RE.sub('', str(message or '')).strip()
+
+
+def _is_noisy_access_log(message):
+    """
+    Ignore Flask/Werkzeug request logs inside per-job logs.
+    During a running job stdout/stderr are redirected, so poll-request logs would
+    otherwise feed back into the pipeline log and freeze both UI and console.
+    """
+    text = _plain_log_text(message)
+    if not text:
+        return True
+    return (
+        '"' in text and
+        'HTTP/' in text and
+        any(path in text for path in (
+            ' /pipeline-status',
+            ' /pipeline-log',
+            ' /download?file=',
+            ' /favicon.ico',
+        ))
+    )
 
 class JobLogStream(io.TextIOBase):
     """Capture print() output from a pipeline thread and forward it to _job_log()."""
@@ -3986,13 +5101,13 @@ class JobLogStream(io.TextIOBase):
         while '\n' in self._buffer:
             line, self._buffer = self._buffer.split('\n', 1)
             line = line.strip()
-            if line:
+            if line and not _is_noisy_access_log(line):
                 _job_log(self.job_id, line)
 
         return len(s)
 
     def flush(self):
-        if self._buffer.strip():
+        if self._buffer.strip() and not _is_noisy_access_log(self._buffer):
             _job_log(self.job_id, self._buffer.strip())
             self._buffer = ""
 
@@ -4002,11 +5117,189 @@ _jobs_lock = threading.Lock()
 
 def _job_set(job_id, **kwargs):
     with _jobs_lock:
-        _jobs.setdefault(job_id, {}).update(kwargs)
+        job = _jobs.setdefault(job_id, {})
+        job.update(kwargs)
+        job['_seq'] = int(job.get('_seq', 0)) + 1
+        job['_updated_at'] = time.time()
 
 def _job_get(job_id):
     with _jobs_lock:
         return dict(_jobs.get(job_id, {}))
+
+def _strip_job_log_prefix(line):
+    """Remove the leading [HH:MM:SS] prefix stored in per-job logs."""
+    return re.sub(r'^\[\d{2}:\d{2}:\d{2}\]\s*', '', str(line or '')).strip()
+
+def _derive_job_status_from_logs(job):
+    """
+    Recover the freshest progress snapshot from the accumulated job log lines.
+    This protects the web UI if the explicit in-memory pct/stage lags behind
+    the worker's emitted progress messages.
+    """
+    logs = job.get('logs') or []
+    if not logs:
+        return {'pct': None, 'stage': None, 'done': False}
+
+    recent_logs = logs[-400:]
+    stage_hints = [
+        (re.compile(r'Generating results CSV & ZIP|docking_results_ranked\.csv|Found \d+ docked ligands', re.I), 92, 'Generating results CSV & ZIP…'),
+        (re.compile(r'STEP 10:\s+AutoDock Vina Molecular Docking|Docking at (?:Pocket|BLIND)|Running molecular docking', re.I), 58, 'Running molecular docking…'),
+        (re.compile(r'PDBQT Conversion Summary|Converting Ligands to PDBQT|Converting to PDBQT', re.I), 45, 'Converting to PDBQT…'),
+        (re.compile(r'Running fragment substitution', re.I), 28, 'Running fragment substitution…'),
+        (re.compile(r'Detecting binding pockets', re.I), 20, 'Detecting binding pockets…'),
+    ]
+
+    for raw_line in reversed(recent_logs):
+        text = _strip_job_log_prefix(raw_line)
+        if not text:
+            continue
+
+        if re.search(r'Job completed successfully', text, re.I):
+            return {'pct': 100, 'stage': 'Complete', 'done': True}
+
+        m = re.search(r'Progress\s+(\d+)%\s*[—-]\s*(.+)$', text, re.I)
+        if m:
+            try:
+                pct = int(m.group(1))
+            except ValueError:
+                pct = None
+            stage = (m.group(2) or '').strip() or None
+            return {'pct': pct, 'stage': stage, 'done': False}
+
+    for raw_line in reversed(recent_logs):
+        text = _strip_job_log_prefix(raw_line)
+        if not text:
+            continue
+        for pattern, pct, stage in stage_hints:
+            if pattern.search(text):
+                return {'pct': pct, 'stage': stage, 'done': False}
+
+    return {'pct': None, 'stage': None, 'done': False}
+
+def _count_job_output_ligands(output_dir):
+    """Count ligands from job output folders using the least-lossy available artifacts."""
+    total = 0
+    seen_any = False
+
+    for entry in sorted(os.listdir(output_dir)) if os.path.exists(output_dir) else []:
+        if not re.fullmatch(r'job\d+_ligands', entry):
+            continue
+        job_dir = os.path.join(output_dir, entry)
+
+        pdbqt_dir = os.path.join(job_dir, 'pdbqt_ligands')
+        if os.path.isdir(pdbqt_dir):
+            count = len([f for f in os.listdir(pdbqt_dir) if f.endswith('.pdbqt')])
+            if count:
+                total += count
+                seen_any = True
+                continue
+
+        smi_count = 0
+        for name in os.listdir(job_dir):
+            if not name.endswith('.smi'):
+                continue
+            if name.startswith('shortlist_'):
+                continue
+            smi_count += 1
+        if smi_count:
+            total += smi_count
+            seen_any = True
+
+    return total if seen_any else None
+
+def _parse_best_affinity_from_csv(csv_path):
+    """Read the best available affinity value from the ranked docking CSV."""
+    if not csv_path or not os.path.exists(csv_path):
+        return None
+
+    try:
+        with open(csv_path, encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            vals = []
+            for row in reader:
+                for col in (
+                    'Conformation_1_Affinity',
+                    'affinity',
+                    'Affinity',
+                    'binding_affinity',
+                    'score',
+                    'Score'
+                ):
+                    if row.get(col):
+                        try:
+                            vals.append(float(row[col]))
+                        except ValueError:
+                            pass
+                        break
+            if vals:
+                return f"{min(vals):.2f} kcal/mol"
+    except Exception:
+        return None
+
+    return None
+
+def _recover_job_results(job_id, job=None):
+    """
+    Rebuild a finished job's result payload from on-disk artifacts.
+    This keeps the frontend usable even if the original completion payload
+    was missed by the browser.
+    """
+    existing = dict((job or {}).get('results') or {})
+    output_dir = os.path.join(OUTPUT_DIR, 'jobs', job_id)
+    if not os.path.isdir(output_dir):
+        return existing or None
+
+    csv_path = os.path.join(output_dir, 'docking_results_ranked.csv')
+    if not os.path.exists(csv_path):
+        csv_path = ''
+
+    zip_candidates = [
+        os.path.join(output_dir, 'top_ligands.zip'),
+        os.path.join(output_dir, 'top_10_ligands.zip'),
+    ]
+    zip_path = next((p for p in zip_candidates if os.path.exists(p)), '')
+
+    recovered = {
+        'success': True,
+        'scaffold': existing.get('scaffold', 'N/A'),
+        'ligands': existing.get('ligands'),
+        'affinity': existing.get('affinity'),
+        'csv': existing.get('csv', ''),
+        'zip': existing.get('zip', ''),
+    }
+
+    if csv_path:
+        try:
+            recovered['csv'] = os.path.relpath(csv_path, OUTPUT_DIR).replace('\\', '/')
+        except ValueError:
+            recovered['csv'] = os.path.basename(csv_path)
+
+    if zip_path:
+        try:
+            recovered['zip'] = os.path.relpath(zip_path, OUTPUT_DIR).replace('\\', '/')
+        except ValueError:
+            recovered['zip'] = os.path.basename(zip_path)
+
+    if recovered.get('ligands') in (None, '', '0', 0):
+        ligands = _count_job_output_ligands(output_dir)
+        if ligands is not None:
+            recovered['ligands'] = ligands
+
+    affinity_missing = recovered.get('affinity') in (None, '', 'N/A')
+    if affinity_missing and csv_path:
+        affinity = _parse_best_affinity_from_csv(csv_path)
+        if affinity:
+            recovered['affinity'] = affinity
+        elif recovered.get('ligands') not in (None, '', '0', 0):
+            recovered['affinity'] = 'Unavailable'
+
+    if recovered.get('scaffold') in (None, ''):
+        recovered['scaffold'] = 'N/A'
+
+    if not recovered.get('csv') and not recovered.get('zip') and not existing:
+        return None
+
+    return recovered
 
 def _append_runtime_log(line):
     try:
@@ -4017,21 +5310,39 @@ def _append_runtime_log(line):
         pass
 
 def _job_log(job_id, message):
+    if _is_noisy_access_log(message):
+        return
+
+    message = _plain_log_text(message)
     ts = time.strftime('%H:%M:%S')
     line = f"[{ts}] {message}"
     full_line = f"[{ts}] [JOB {job_id}] {message}"
 
-    # Write directly to the real console/stdout.
+    # Background pipeline threads can deadlock IDE consoles like Spyder if they
+    # write to the GUI-managed sys.stdout stream. Keep background logs on the
+    # real terminal/runtime log only.
     try:
         sys.__stdout__.write(full_line + '\n')
         sys.__stdout__.flush()
     except Exception:
         pass
 
-    # Store per-job log lines for /pipeline-log
+    # Store per-job log lines for /pipeline-log.
+    # NOTE: do NOT increment _seq here — _seq is a status-change counter
+    # (pct/stage/done only, bumped by _job_set). Bumping it on every log line
+    # caused the frontend seq-guard to drop real status updates and freeze.
     with _jobs_lock:
         job = _jobs.setdefault(job_id, {})
-        job.setdefault('logs', []).append(line)
+        logs = job.setdefault('logs', [])
+        logs.append(line)
+        overflow = len(logs) - MAX_JOB_LOG_LINES
+        if overflow > 0:
+            del logs[:overflow]
+            job['log_base_offset'] = int(job.get('log_base_offset', 0)) + overflow
+        else:
+            job.setdefault('log_base_offset', 0)
+        job['_updated_at'] = time.time()
+        job['last_log'] = line
 
     _append_runtime_log(full_line)
 
@@ -4048,11 +5359,198 @@ def disable_http_cache(resp):
 @app.route('/')
 def index():
     template_name = (
-        'enzyme_processor_patched.html'
-        if os.path.exists(os.path.join(SCRIPT_DIR, 'enzyme_processor_patched.html'))
-        else 'enzyme_processor.html'
+        'index.html'
+        if os.path.exists(os.path.join(SCRIPT_DIR, 'index.html'))
+        else 'index.html'
     )
-    return render_template(template_name)
+    resp = make_response(render_template(template_name))
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    resp.headers['Pragma'] = 'no-cache'
+    resp.headers['Expires'] = '0'
+    return resp
+
+
+@app.route('/auth/me')
+def auth_me():
+    return jsonify({'success': True, 'user': _current_user_payload()})
+
+
+@app.route('/auth/register', methods=['POST'])
+def auth_register():
+    payload = request.get_json(silent=True) or {}
+    name = str(payload.get('name', '')).strip()
+    username = str(payload.get('username', '')).strip()
+    password = payload.get('password', '')
+
+    if not name or not username or not password:
+        return jsonify({'success': False, 'error': 'Please fill in all fields.'}), 400
+    if len(username) < 3:
+        return jsonify({'success': False, 'error': 'Username must be at least 3 characters.'}), 400
+    if len(password) < 6:
+        return jsonify({'success': False, 'error': 'Password must be at least 6 characters.'}), 400
+
+    with _auth_lock:
+        users = _load_user_store()
+        if username in users:
+            return jsonify({'success': False, 'error': 'That username is already taken.'}), 400
+
+        users[username] = {
+            'name': name,
+            'password_hash': generate_password_hash(password),
+            'createdAt': int(time.time() * 1000),
+        }
+        _save_user_store(users)
+
+    session.clear()
+    session.permanent = True
+    session['username'] = username
+    return jsonify({'success': True, 'user': {'username': username, 'name': name}})
+
+
+@app.route('/auth/login', methods=['POST'])
+def auth_login():
+    payload = request.get_json(silent=True) or {}
+    username = str(payload.get('username', '')).strip()
+    password = payload.get('password', '')
+
+    if not username or not password:
+        return jsonify({'success': False, 'error': 'Please fill in all fields.'}), 400
+
+    users = _load_user_store()
+    user = users.get(username)
+    password_hash = (user or {}).get('password_hash')
+    if not user or not password_hash or not check_password_hash(password_hash, password):
+        return jsonify({'success': False, 'error': 'Incorrect username or password.'}), 401
+
+    session.clear()
+    session.permanent = True
+    session['username'] = username
+    return jsonify({
+        'success': True,
+        'user': {
+            'username': username,
+            'name': user.get('name') or username,
+        }
+    })
+
+
+@app.route('/auth/logout', methods=['POST'])
+def auth_logout():
+    session.clear()
+    return jsonify({'success': True})
+
+
+@app.route('/auth/history', methods=['GET'])
+def auth_history_get():
+    username, auth_error = _require_authenticated_username()
+    if auth_error:
+        return auth_error
+
+    with _auth_lock:
+        history = _load_history_store()
+        user_history = _prune_history_entries(history.get(username, []))
+        history[username] = user_history
+        _save_history_store(history)
+
+    return jsonify({'success': True, 'history': user_history})
+
+
+@app.route('/auth/history', methods=['POST'])
+def auth_history_add():
+    username, auth_error = _require_authenticated_username()
+    if auth_error:
+        return auth_error
+
+    payload = request.get_json(silent=True) or {}
+    entry = payload.get('entry')
+    if not isinstance(entry, dict):
+        return jsonify({'success': False, 'error': 'Invalid history entry.'}), 400
+
+    cleaned = dict(entry)
+    cleaned['ts'] = _coerce_timestamp_ms(cleaned.get('ts')) or int(time.time() * 1000)
+    cleaned.pop('username', None)
+
+    with _auth_lock:
+        history = _load_history_store()
+        history[username] = _merge_history_entries(history.get(username, []), [cleaned])
+        _save_history_store(history)
+
+    return jsonify({'success': True})
+
+
+@app.route('/auth/history', methods=['DELETE'])
+def auth_history_clear():
+    username, auth_error = _require_authenticated_username()
+    if auth_error:
+        return auth_error
+
+    with _auth_lock:
+        history = _load_history_store()
+        history[username] = []
+        _save_history_store(history)
+
+    return jsonify({'success': True})
+
+
+@app.route('/auth/import-legacy', methods=['POST'])
+def auth_import_legacy():
+    payload = request.get_json(silent=True) or {}
+    legacy_users = payload.get('users') or {}
+    legacy_history = payload.get('history') or []
+    legacy_session = payload.get('session') or {}
+
+    imported_users = 0
+
+    with _auth_lock:
+        users = _load_user_store()
+        history = _load_history_store()
+
+        if isinstance(legacy_users, dict):
+            for username, record in legacy_users.items():
+                username = str(username or '').strip()
+                if not username or username in users or not isinstance(record, dict):
+                    continue
+
+                decoded_password = _decode_legacy_password(record.get('password'))
+                if not decoded_password:
+                    continue
+
+                users[username] = {
+                    'name': str(record.get('name') or username).strip() or username,
+                    'password_hash': generate_password_hash(decoded_password),
+                    'createdAt': _coerce_timestamp_ms(record.get('createdAt')) or int(time.time() * 1000),
+                }
+                imported_users += 1
+
+        if isinstance(legacy_history, list):
+            grouped_history = defaultdict(list)
+            for entry in legacy_history:
+                if not isinstance(entry, dict):
+                    continue
+                username = str(entry.get('username', '')).strip()
+                if not username:
+                    continue
+                if username not in users:
+                    continue
+                grouped_history[username].append(entry)
+
+            for username, entries in grouped_history.items():
+                history[username] = _merge_history_entries(history.get(username, []), entries)
+
+        _save_user_store(users)
+        _save_history_store(history)
+
+    legacy_session_username = str(legacy_session.get('username', '')).strip()
+    if legacy_session_username and legacy_session_username in _load_user_store():
+        session.clear()
+        session.permanent = True
+        session['username'] = legacy_session_username
+
+    return jsonify({
+        'success': True,
+        'imported_users': imported_users,
+        'user': _current_user_payload(),
+    })
 
 
 @app.route('/generate-scaffold', methods=['POST'])
@@ -4146,34 +5644,19 @@ def generate_scaffold():
 
         scaffold_choice = request.form.get('scaffoldChoice', '1')
 
-        suffix = Path(secure_filename(ligand_file.filename)).suffix.lower()
-        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-            ligand_file.save(tmp.name)
-            tmp_path = tmp.name
+        suffix = Path(secure_filename(ligand_file.filename)).suffix.lower() or '.sdf'
+        tmp_fd, tmp_path = tempfile.mkstemp(prefix='aloe_scaffold_', suffix=suffix)
+        os.close(tmp_fd)
 
-        # ── Step 1: Parse uploaded file ─────────────────────────────────────
-        rdmol = None
-        if suffix in ('.sdf', '.mol'):
-            # removeHs=True gives us a clean heavy-atom mol straight away
-            supplier = Chem.SDMolSupplier(tmp_path, removeHs=True, sanitize=True)
-            rdmol = next((m for m in supplier if m is not None), None)
-        elif suffix == '.pdb':
-            rdmol = Chem.MolFromPDBFile(tmp_path, removeHs=True, sanitize=True)
+        try:
+            ligand_file.save(tmp_path)
 
-        if rdmol is None:
-            # OpenBabel fallback for unsupported formats
-            obConv = ob.OBConversion()
-            obConv.SetInFormat(suffix.replace('.', ''))
-            obConv.SetOutFormat('smi')
-            obmol = ob.OBMol()
-            obConv.ReadFile(obmol, tmp_path)
-            raw_smi = obConv.WriteString(obmol).strip().split()[0]
-            rdmol = Chem.MolFromSmiles(raw_smi)
+            # ── Step 1: Parse uploaded file ─────────────────────────────────
+            rdmol = _load_molecule_from_file(tmp_path)
             if rdmol is None:
-                os.unlink(tmp_path)
                 return jsonify({'success': False, 'error': 'Could not parse ligand file'}), 400
-
-        os.unlink(tmp_path)
+        finally:
+            _remove_file_with_retries(tmp_path)
 
         # ── Step 2: Canonical clean SMILES from parsed mol ───────────────────
         # Chem.MolToSmiles strips file-format artefacts and gives the true
@@ -4461,15 +5944,17 @@ def start_pipeline():
     Frontend polls /pipeline-status?job_id=xxx for real-time progress.
     """
     try:
-        output_dir  = OUTPUT_DIR
-        uploads_dir = UPLOADS_DIR
+        job_id = str(uuid.uuid4())
+        output_dir = os.path.join(OUTPUT_DIR, 'jobs', job_id)
+        uploads_dir = os.path.join(output_dir, 'uploads')
+        os.makedirs(output_dir, exist_ok=True)
         os.makedirs(uploads_dir, exist_ok=True)
         _job_log('SYSTEM', 'Received /start-pipeline request')
 
         enzyme_file = request.files['enzymeFile']
         ligand_file = request.files['ligandFile']
-        enzyme_path = os.path.join(uploads_dir, secure_filename(enzyme_file.filename))
-        ligand_path = os.path.join(uploads_dir, secure_filename(ligand_file.filename))
+        enzyme_path = _build_upload_path(uploads_dir, 'enzyme', enzyme_file.filename, '.pdb')
+        ligand_path = _build_upload_path(uploads_dir, 'ligand', ligand_file.filename, '.sdf')
         enzyme_file.save(enzyme_path)
         ligand_file.save(ligand_path)
 
@@ -4486,7 +5971,6 @@ def start_pipeline():
                 'mw_range': (min_mw, max_mw)
             })
 
-        job_id = str(uuid.uuid4())
         _job_set(job_id, pct=1, stage='Starting…', done=False, error=None, results=None)
         _job_log(
             job_id,
@@ -4530,10 +6014,7 @@ def start_pipeline():
 
                     _job_log(job_id, f"Pipeline core completed in {time.time() - started_at:.1f}s")
 
-                    ligands_generated = 0
-                    if results.get('docking_results'):
-                        for v in results['docking_results'].values():
-                            ligands_generated += v.get('total_docked', 0)
+                    ligands_generated = _count_pipeline_ligands(results)
 
                     best_affinity = 'N/A'
                     results_csv = results.get('results_csv', '')
@@ -4555,18 +6036,27 @@ def start_pipeline():
                                     best_affinity = f"{min(vals):.2f}"
                         except Exception as e:
                             _job_log(job_id, f"Could not parse affinity from CSV: {e}")
+                    elif ligands_generated > 0:
+                        best_affinity = 'Unavailable'
 
                     csv_rel = zip_rel = ''
                     if results_csv:
                         try:
-                            csv_rel = os.path.relpath(results_csv, output_dir)
+                            csv_rel = os.path.relpath(results_csv, OUTPUT_DIR).replace('\\', '/')
                         except ValueError:
                             csv_rel = os.path.basename(results_csv)
 
                     zip_path = os.path.join(output_dir, 'top_ligands.zip')
                     if os.path.exists(zip_path):
-                        zip_rel = 'top_ligands.zip'
+                        zip_rel = os.path.relpath(zip_path, OUTPUT_DIR).replace('\\', '/')
 
+                    affinity_display = (
+                        f"{best_affinity} kcal/mol"
+                        if best_affinity not in {'N/A', 'Unavailable'}
+                        else best_affinity
+                    )
+
+                    _job_log(job_id, "Job completed successfully")
                     _job_set(
                         job_id,
                         pct=100,
@@ -4577,13 +6067,11 @@ def start_pipeline():
                             'success': True,
                             'scaffold': results.get('scaffold_smiles', 'N/A'),
                             'ligands': ligands_generated,
-                            'affinity': f"{best_affinity} kcal/mol",
+                            'affinity': affinity_display,
                             'csv': csv_rel,
                             'zip': zip_rel,
                         }
                     )
-                    _job_log(job_id, "Job completed successfully")
-
             except Exception as exc:
                 import traceback
                 tb = traceback.format_exc()
@@ -4610,14 +6098,62 @@ def pipeline_status():
     job = _job_get(job_id)
     if not job:
         return jsonify({'success': False, 'error': 'Unknown job_id'}), 404
-    return jsonify({
+    derived = _derive_job_status_from_logs(job)
+
+    pct = job.get('pct', 0)
+    stage = job.get('stage', '')
+    done = job.get('done', False)
+    error = job.get('error')
+    results = job.get('results')
+
+    derived_pct = derived.get('pct')
+    derived_stage = derived.get('stage')
+    # Always take the higher pct from derived logs.
+    if derived_pct is not None and (not isinstance(pct, (int, float)) or derived_pct > pct):
+        pct = derived_pct
+    # Always prefer the freshest stage label from the logs.
+    if derived_stage:
+        stage = derived_stage
+
+    if derived.get('done'):
+        done = True
+
+    recovered_results = _recover_job_results(job_id, job)
+    if recovered_results:
+        if not results:
+            results = recovered_results
+        else:
+            merged = dict(recovered_results)
+            merged.update({k: v for k, v in results.items() if v not in (None, '', [])})
+            results = merged
+
+    last_log = job.get('last_log') or ''
+    # Mark done as soon as the completion log lands, even if result payloads are
+    # still catching up on disk.
+    if not done and re.search(r'Job completed successfully', last_log, re.I):
+        done = True
+    if not done and recovered_results and (isinstance(pct, (int, float)) and pct >= 100):
+        done = True
+
+    if done and not error:
+        pct = 100
+        stage = 'Complete'
+
+    resp = jsonify({
         'success': True,
-        'pct':     job.get('pct', 0),
-        'stage':   job.get('stage', ''),
-        'done':    job.get('done', False),
-        'error':   job.get('error'),
-        'results': job.get('results'),
+        'pct':     pct,
+        'stage':   stage,
+        'done':    done,
+        'error':   error,
+        'results': results,
+        'seq':     job.get('_seq', 0),
+        'updated_at': job.get('_updated_at'),
+        'last_log': last_log,
     })
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    resp.headers['Pragma'] = 'no-cache'
+    resp.headers['Expires'] = '0'
+    return resp
 
 
 @app.route('/pipeline-log')
@@ -4642,13 +6178,20 @@ def pipeline_log():
         return jsonify({'success': False, 'error': 'Unknown job_id'}), 404
 
     all_logs = job.get('logs', [])
-    new_lines = all_logs[offset:]
-    return jsonify({
+    base_offset = int(job.get('log_base_offset', 0) or 0)
+    effective_offset = max(offset, base_offset)
+    new_lines = all_logs[max(0, effective_offset - base_offset):]
+    resp = jsonify({
         'success': True,
         'lines':   new_lines,
-        'total':   len(all_logs),   # next offset the client should send
+        'total':   base_offset + len(all_logs),   # absolute next offset
         'done':    job.get('done', False),
+        'dropped': max(0, base_offset - offset),
     })
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    resp.headers['Pragma'] = 'no-cache'
+    resp.headers['Expires'] = '0'
+    return resp
 
 
 @app.route('/download')
@@ -4656,11 +6199,14 @@ def download_file():
     filename = request.args.get('file', '')
     if not filename:
         abort(400)
+    filename = filename.replace('\\', '/')
     output_dir = OUTPUT_DIR
     full_path  = os.path.realpath(os.path.join(output_dir, filename))
     if not full_path.startswith(os.path.realpath(output_dir)):
         abort(403)
-    return send_from_directory(output_dir, filename, as_attachment=True)
+    if not os.path.exists(full_path):
+        abort(404)
+    return send_file(full_path, as_attachment=True, download_name=os.path.basename(full_path))
 
 
 
@@ -4669,6 +6215,8 @@ if __name__ == "__main__":
     import socket
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(line_buffering=True)
+    logging.getLogger('werkzeug').disabled = True
+    app.logger.disabled = True
 
     def _find_free_port(start=5001, max_tries=20):
         # Skip 5000 — macOS AirPlay Receiver squats on it.
@@ -4687,9 +6235,9 @@ if __name__ == "__main__":
     PORT = _find_free_port(5001)
 
     _actual_template = (
-        'enzyme_processor_patched.html'
-        if os.path.exists(os.path.join(SCRIPT_DIR, 'enzyme_processor_patched.html'))
-        else 'enzyme_processor.html'
+        'index.html'
+        if os.path.exists(os.path.join(SCRIPT_DIR, 'index.html'))
+        else 'index.html'
     )
     print("=" * 60)
     print("Enzyme Drug Discovery Pipeline - Server Starting")
@@ -4697,10 +6245,10 @@ if __name__ == "__main__":
     print(f"\nServer URL: http://127.0.0.1:{PORT}")
     print(f"Template:   {os.path.join(SCRIPT_DIR, _actual_template)}")
     print(f"Runtime log: {RUNTIME_LOG}")
-    print("\nNote: Debug mode enabled, but reloader disabled for Spyder compatibility")
+    print("\nNote: Access-log noise is disabled and reloader stays off for Spyder")
     print("Tip: to reclaim port 5000, disable AirPlay Receiver in")
     print("     System Settings > General > AirDrop & Handoff")
     print("Press CTRL+C to stop the server")
     print("=" * 60)
 
-    app.run(debug=True, port=PORT, use_reloader=False)
+    app.run(debug=True, port=PORT, use_reloader=False, threaded=True)
