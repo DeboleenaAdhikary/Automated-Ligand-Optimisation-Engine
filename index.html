@@ -30,8 +30,7 @@
         }
 
         .header-container {
-            max-width: 1400px;
-            margin: 0 auto;
+            width: 100%;
             display: grid;
             grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
             align-items: center;
@@ -50,6 +49,7 @@
             display: flex;
             align-items: center;
             min-width: 220px;
+            margin-left: -2rem;
         }
 
         .logo-section img {
@@ -439,11 +439,47 @@
         footer {
             background-color: #050505;
             border-bottom: 16px solid #8b0000;
-            padding: 3.5rem 1rem;
+            padding: 3.5rem 0;
             color: #f3f4f6;
-            text-align: center;
             margin-top: auto;
         }
+        .footer-inner {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 2rem;
+            flex-wrap: wrap;
+            padding: 0 2rem;
+            box-sizing: border-box;
+        }
+        .footer-col {
+            flex: 0 0 auto;
+        }
+        .footer-col:last-child {
+            text-align: right;
+        }
+        .footer-col h4 {
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #9ca3af;
+            margin-bottom: 0.55rem;
+        }
+        .footer-col .footer-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #f3f4f6;
+            margin-bottom: 0.3rem;
+        }
+        .footer-col a {
+            color: #fca5a5;
+            text-decoration: none;
+            font-size: 0.88rem;
+            word-break: break-all;
+        }
+        .footer-col a:hover { text-decoration: underline; }
 
         /* ── Tutorial Button ──────────────────────────────────────────── */
         .tutorial-btn {
@@ -957,7 +993,7 @@
     <main>
         <!-- auth slot bar: tutorial on left, sign-in on right -->
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem; margin-top:-1rem;">
-            <button class="tutorial-btn" onclick="openTutorial()">
+            <button id="tutorialBtn" type="button" class="tutorial-btn" onclick="openTutorial()">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
         <circle cx="12" cy="12" r="10"/>
         <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-1.5 2-2.5 2.5V13"/>
@@ -1099,11 +1135,19 @@
     </main>
 
     <footer>
-        <div class="footer-content">
-            <h3 style="font-weight: 700; margin-bottom: 0.5rem">CONTACT US:</h3>
-            <div style="text-transform: uppercase; margin-bottom: 0.25rem">University of Hyderabad</div>
-            <div style="color: #d1d5db">Prof. CR Rao Road, Gachibowli, Hyderabad-500046, Telangana, India</div>
-            <div style="margin-top: 0.25rem">+91-40-23130000</div>
+        <div class="footer-inner">
+            <!-- Left: Creator -->
+            <div class="footer-col">
+                <h4>Created &amp; Managed by</h4>
+                <div class="footer-name">Deboleena Adhikary</div>
+                <a href="javascript:void(0)" onclick="location.href='mail'+'to:deboleenaadhikary08'+'@'+'gmail.com'" style="cursor:pointer;">deboleenaadhikary08&#64;gmail&#46;com</a>
+            </div>
+            <!-- Right: Supervisor -->
+            <div class="footer-col">
+                <h4>For Further Information Contact</h4>
+                <div class="footer-name">Dr. N. Prakash Prabhu</div>
+                <a href="javascript:void(0)" onclick="location.href='mail'+'to:nppsl'+'@'+'uohyd.ac.in'" style="cursor:pointer;">nppsl&#64;uohyd&#46;ac&#46;in</a>
+            </div>
         </div>
     </footer>
 
@@ -1183,19 +1227,139 @@
         //  AUTH & HISTORY SYSTEM
         // ═══════════════════════════════════════════════════════════════
 
-        const USERS_KEY   = 'aloe_users';
-        const SESSION_KEY = 'aloe_session';
-        const HISTORY_KEY = 'aloe_history';
+        const LEGACY_USERS_KEY   = 'aloe_users';
+        const LEGACY_SESSION_KEY = 'aloe_session';
+        const LEGACY_HISTORY_KEY = 'aloe_history';
+        const LEGACY_MIGRATION_KEY = 'aloe_legacy_migrated_v1';
+        const HISTORY_TTL = 48 * 60 * 60 * 1000; // 48 hours in ms
+        let authUser = null;
 
         // ── Helpers ──────────────────────────────────────────────────
-        function getUsers()   { try { return JSON.parse(localStorage.getItem(USERS_KEY) || '{}'); } catch { return {}; } }
-        function saveUsers(u) { localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
-        function getSession() { try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch { return null; } }
-        function saveSession(s){ localStorage.setItem(SESSION_KEY, JSON.stringify(s)); }
-        function clearSession(){ localStorage.removeItem(SESSION_KEY); }
-        function getHistory()  { try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch { return []; } }
-        function saveHistory(h){ localStorage.setItem(HISTORY_KEY, JSON.stringify(h)); }
-        function currentUser() { return getSession(); }
+        function readLegacyJson(key, fallback) {
+            try {
+                const raw = localStorage.getItem(key);
+                return raw ? JSON.parse(raw) : fallback;
+            } catch {
+                return fallback;
+            }
+        }
+
+        function getLegacyUsers() {
+            const users = readLegacyJson(LEGACY_USERS_KEY, {});
+            return users && typeof users === 'object' && !Array.isArray(users) ? users : {};
+        }
+
+        function getLegacySession() {
+            const stored = readLegacyJson(LEGACY_SESSION_KEY, null);
+            return stored && typeof stored === 'object' ? stored : null;
+        }
+
+        function getLegacyHistory() {
+            const history = readLegacyJson(LEGACY_HISTORY_KEY, []);
+            return Array.isArray(history) ? history : [];
+        }
+
+        function clearLegacyStorage() {
+            try {
+                localStorage.removeItem(LEGACY_USERS_KEY);
+                localStorage.removeItem(LEGACY_SESSION_KEY);
+                localStorage.removeItem(LEGACY_HISTORY_KEY);
+            } catch (_) {}
+        }
+
+        function wasLegacyMigrationCompleted() {
+            try {
+                return localStorage.getItem(LEGACY_MIGRATION_KEY) === '1';
+            } catch {
+                return false;
+            }
+        }
+
+        function markLegacyMigrationCompleted() {
+            try {
+                localStorage.setItem(LEGACY_MIGRATION_KEY, '1');
+            } catch (_) {}
+        }
+
+        function currentUser() {
+            return authUser;
+        }
+
+        function setCurrentUser(user) {
+            authUser = user && typeof user === 'object' ? user : null;
+        }
+
+        async function apiJson(url, options = {}) {
+            const headers = { ...(options.headers || {}) };
+            const body = options.body;
+            if (body != null && !(body instanceof FormData) && !headers['Content-Type']) {
+                headers['Content-Type'] = 'application/json';
+            }
+
+            const response = await fetch(url, {
+                ...options,
+                headers,
+                credentials: 'same-origin',
+                cache: 'no-store',
+            });
+
+            let data = {};
+            try {
+                data = await response.json();
+            } catch (_) {}
+
+            if (!response.ok || data.success === false) {
+                throw new Error(data.error || 'Request failed.');
+            }
+
+            return data;
+        }
+
+        async function refreshCurrentUser() {
+            try {
+                const data = await apiJson('/auth/me');
+                setCurrentUser(data.user || null);
+            } catch (_) {
+                setCurrentUser(null);
+            }
+            return currentUser();
+        }
+
+        async function migrateLegacyStorage() {
+            if (wasLegacyMigrationCompleted()) return null;
+
+            const users = getLegacyUsers();
+            const history = getLegacyHistory();
+            const legacySession = getLegacySession();
+            if (!Object.keys(users).length && !history.length && !legacySession) return null;
+
+            try {
+                const data = await apiJson('/auth/import-legacy', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        users,
+                        history,
+                        session: legacySession,
+                    }),
+                });
+                setCurrentUser(data.user || null);
+                clearLegacyStorage();
+                markLegacyMigrationCompleted();
+                return currentUser();
+            } catch (err) {
+                console.warn('Legacy auth migration failed:', err);
+                return null;
+            }
+        }
+
+        async function initAuth() {
+            renderAuthSlot();
+            const migratedUser = await migrateLegacyStorage();
+            if (!migratedUser) {
+                await refreshCurrentUser();
+            }
+            renderAuthSlot();
+        }
 
         // ── Render header auth slot ───────────────────────────────────
         function renderAuthSlot() {
@@ -1261,36 +1425,55 @@
             el.style.display = 'block';
         }
 
-        function doLogin() {
+        async function doLogin() {
             const username = document.getElementById('loginUser').value.trim();
             const password = document.getElementById('loginPass').value;
             if (!username || !password) return showError('loginError', 'Please fill in all fields.');
-            const users = getUsers();
-            const user  = users[username];
-            if (!user || user.password !== btoa(password)) return showError('loginError', 'Incorrect username or password.');
-            saveSession({ username, name: user.name });
-            closeAuthOverlay();
-            renderAuthSlot();
+            try {
+                const data = await apiJson('/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ username, password }),
+                });
+                setCurrentUser(data.user || null);
+                clearLegacyStorage();
+                markLegacyMigrationCompleted();
+                closeAuthOverlay();
+                renderAuthSlot();
+            } catch (err) {
+                showError('loginError', err.message || 'Incorrect username or password.');
+            }
         }
 
-        function doRegister() {
+        async function doRegister() {
             const name     = document.getElementById('regName').value.trim();
             const username = document.getElementById('regUser').value.trim();
             const password = document.getElementById('regPass').value;
             if (!name || !username || !password) return showError('regError', 'Please fill in all fields.');
             if (username.length < 3) return showError('regError', 'Username must be at least 3 characters.');
             if (password.length < 6) return showError('regError', 'Password must be at least 6 characters.');
-            const users = getUsers();
-            if (users[username]) return showError('regError', 'That username is already taken.');
-            users[username] = { name, password: btoa(password), createdAt: Date.now() };
-            saveUsers(users);
-            saveSession({ username, name });
-            closeAuthOverlay();
-            renderAuthSlot();
+            try {
+                const data = await apiJson('/auth/register', {
+                    method: 'POST',
+                    body: JSON.stringify({ name, username, password }),
+                });
+                setCurrentUser(data.user || null);
+                clearLegacyStorage();
+                markLegacyMigrationCompleted();
+                closeAuthOverlay();
+                renderAuthSlot();
+            } catch (err) {
+                showError('regError', err.message || 'Could not create account.');
+            }
         }
 
-        function doLogout() {
-            clearSession();
+        async function doLogout() {
+            try {
+                await apiJson('/auth/logout', { method: 'POST' });
+            } catch (_) {}
+            setCurrentUser(null);
+            clearLegacyStorage();
+            markLegacyMigrationCompleted();
+            closeHistory();
             renderAuthSlot();
         }
 
@@ -1300,30 +1483,55 @@
         });
 
         // ── History ───────────────────────────────────────────────────
-        function addHistoryEntry(entry) {
+        async function addHistoryEntry(entry) {
             const user = currentUser();
             if (!user) return;
-            const all = getHistory();
-            // tag with username so each user sees only their runs
-            all.unshift({ ...entry, username: user.username });
-            // keep max 50
-            saveHistory(all.slice(0, 50));
+            try {
+                await apiJson('/auth/history', {
+                    method: 'POST',
+                    body: JSON.stringify({ entry }),
+                });
+            } catch (err) {
+                console.warn('Could not save history entry:', err);
+            }
         }
 
-        function openHistory() {
+        async function openHistory() {
             document.getElementById('userChip')?.classList.remove('open');
-            const user = currentUser();
+            let user = currentUser();
+            if (!user) {
+                await refreshCurrentUser();
+                user = currentUser();
+            }
             if (!user) { openAuthOverlay(); return; }
-            renderHistory(user.username);
             document.getElementById('historyOverlay').classList.add('visible');
+            await renderHistory(user.username);
         }
         function closeHistory() {
             document.getElementById('historyOverlay').classList.remove('visible');
         }
 
-        function renderHistory(username) {
+        async function renderHistory(username) {
             const list = document.getElementById('historyList');
-            const all  = getHistory().filter(r => r.username === username);
+            list.innerHTML = `
+                <div class="history-empty">
+                    <h3>Loading runs...</h3>
+                    <p>Please wait a moment.</p>
+                </div>`;
+
+            let all = [];
+            try {
+                const data = await apiJson('/auth/history');
+                all = Array.isArray(data.history) ? data.history : [];
+            } catch (err) {
+                list.innerHTML = `
+                    <div class="history-empty">
+                        <h3>Could not load history</h3>
+                        <p>${err.message || 'Please try again.'}</p>
+                    </div>`;
+                return;
+            }
+
             if (!all.length) {
                 list.innerHTML = `
                     <div class="history-empty">
@@ -1335,8 +1543,10 @@
                     </div>`;
                 return;
             }
+
             list.innerHTML = all.map((r, i) => {
                 const date  = new Date(r.ts).toLocaleString();
+                const expiresAt = new Date(r.ts + HISTORY_TTL).toLocaleString();
                 const statusCls = r.error ? 'error' : 'success';
                 const statusTxt = r.error ? 'Error' : 'Completed';
                 return `
@@ -1346,6 +1556,7 @@
                             <span class="history-run-status ${statusCls}">${statusTxt}</span>
                             <span class="history-run-time">${date}</span>
                         </div>
+                        <div style="font-size:0.75rem;color:#9ca3af;margin-bottom:0.5rem;">Expires: ${expiresAt}</div>
                         ${r.error ? `<div style="font-size:0.82rem;color:#dc2626;">❌ ${r.error}</div>` : `
                         <div class="history-run-details">
                             <div class="history-detail-item">
@@ -1377,17 +1588,20 @@
             }).join('');
         }
 
-        function clearHistory() {
+        async function clearHistory() {
             const user = currentUser();
             if (!user) return;
             if (!confirm('Clear all your run history?')) return;
-            const all = getHistory().filter(r => r.username !== user.username);
-            saveHistory(all);
-            renderHistory(user.username);
+            try {
+                await apiJson('/auth/history', { method: 'DELETE' });
+                await renderHistory(user.username);
+            } catch (err) {
+                alert(err.message || 'Could not clear history.');
+            }
         }
 
         // ── Init on load ──────────────────────────────────────────────
-        renderAuthSlot();
+        initAuth();
     </script>
     <script>
         let viewer        = null;
@@ -1709,7 +1923,13 @@
         const STEP_IDS  = ['ms-scaffold','ms-apo','ms-frag','ms-pdbqt','ms-pockets','ms-docking','ms-results'];
         const STEP_PCT  = [10, 20, 45, 58, 62, 92, 100];
         let _displayPct = 0;
-        let _pollInterval = null;
+        let _pollTimer = null;
+        let _pollJobId = null;
+        let _statusSeq = -1;
+        let _statusPollInFlight = false;
+        let _completionHandled = false;
+        let _finalizeTimer = null;
+        let _finalizeAttempts = 0;
         let _latestStage = 'Initializing pipeline';
 
         function _friendlyStage(rawStage) {
@@ -1753,35 +1973,180 @@
             _updateProgressText();
         }
 
-        function startPolling(jobId) {
-            _latestStage = 'Initializing pipeline';
-            _setBarPct(1);
+        function _stopStatusPolling() {
+            if (_pollTimer) {
+                clearTimeout(_pollTimer);
+                _pollTimer = null;
+            }
+            _pollJobId = null;
+            _statusSeq = -1;
+            _statusPollInFlight = false;
+        }
 
-            // ── Status poll ──────────────────────────────────────────────
-            _pollInterval = setInterval(async () => {
-                try {
-                    const res  = await fetch('/pipeline-status?job_id=' + encodeURIComponent(jobId), {
-                        cache: 'no-store'
-                    });
-                    const data = await res.json();
-                    if (!data.success) return;
+        function _clearFinalizeTimer() {
+            if (_finalizeTimer) {
+                clearTimeout(_finalizeTimer);
+                _finalizeTimer = null;
+            }
+        }
 
-                    if (data.stage) _latestStage = data.stage;
-                    if (typeof data.pct === 'number') _setBarPct(data.pct);
+        function _hasUsableResults(results) {
+            if (!results || typeof results !== 'object') return false;
+            return Boolean(
+                results.csv ||
+                results.zip ||
+                results.affinity ||
+                results.scaffold ||
+                typeof results.ligands !== 'undefined'
+            );
+        }
+
+        async function _fetchStatusSnapshot(jobId) {
+            const res = await fetch(
+                '/pipeline-status?job_id=' + encodeURIComponent(jobId) + '&_=' + Date.now(),
+                {
+                    cache: 'no-store',
+                    headers: { 'Cache-Control': 'no-store' }
+                }
+            );
+            return res.json();
+        }
+
+        function _scheduleFinalize(jobId, delay = 0) {
+            if (!jobId || _completionHandled || _pollJobId !== jobId) return;
+            _clearFinalizeTimer();
+            _finalizeTimer = setTimeout(() => {
+                _finalizeTimer = null;
+                _finalizeFromServer(jobId);
+            }, delay);
+        }
+
+        async function _finalizeFromServer(jobId) {
+            if (!jobId || _completionHandled || _pollJobId !== jobId) return;
+            _finalizeAttempts += 1;
+            try {
+                const data = await _fetchStatusSnapshot(jobId);
+                if (!data.success || _pollJobId !== jobId) {
+                    if (_finalizeAttempts < 12) _scheduleFinalize(jobId, 800);
+                    return;
+                }
+
+                if (data.last_log) _syncProgressFromLogLine(data.last_log, /*stageOnly=*/true);
+
+                // Treat done/error flags as sufficient — don't require results to
+                // be fully populated (zip may not exist if docking produced nothing).
+                const readyFromStatus = Boolean(
+                    data.error ||
+                    data.done ||
+                    _hasUsableResults(data.results) ||
+                    (typeof data.pct === 'number' && data.pct >= 100) ||
+                    /job completed successfully|pipeline core completed/i.test(String(data.last_log || ''))
+                );
+
+                if (!readyFromStatus) {
+                    if (_finalizeAttempts < 12) _scheduleFinalize(jobId, 800);
+                    return;
+                }
+
+                if (!data.error) _setBarPct(100);
+                onPipelineComplete({
+                    success: true,
+                    done: true,
+                    error: data.error || null,
+                    results: data.results || {},
+                    _jobId: jobId
+                });
+            } catch (_) {
+                if (_finalizeAttempts < 12) _scheduleFinalize(jobId, 1000);
+            }
+        }
+
+        function _scheduleStatusPoll(jobId, delay = 1200) {
+            if (!jobId || _pollJobId !== jobId) return;
+            if (_pollTimer) clearTimeout(_pollTimer);
+            _pollTimer = setTimeout(() => _pollStatus(jobId), delay);
+        }
+
+        async function _pollStatus(jobId) {
+            if (!jobId || _pollJobId !== jobId || _statusPollInFlight) return;
+            _statusPollInFlight = true;
+            try {
+                const data = await _fetchStatusSnapshot(jobId);
+                if (!data.success || _pollJobId !== jobId) return;
+
+                // Track seq only to detect if a fresher response already arrived —
+                // but NEVER discard a response solely because seq looks "old".
+                // (_job_log increments _seq on every log line so seq can jump by
+                // hundreds between polls; dropping responses was the freeze bug.)
+                if (typeof data.seq === 'number') {
+                    _statusSeq = Math.max(_statusSeq, data.seq);
+                }
+
+                const hasPct = typeof data.pct === 'number' && Number.isFinite(data.pct);
+                if (data.stage) _latestStage = data.stage;
+
+                // Use server pct as the authoritative source for the progress bar.
+                // Math.max ensures the bar never goes backward.
+                if (hasPct && !data.done && !data.error) {
+                    _setBarPct(Math.max(_displayPct, data.pct));
+                }
+                // Log sync only updates the stage label, not the % (server pct wins).
+                if (data.last_log) _syncProgressFromLogLine(data.last_log, /*stageOnly=*/true);
+
+                // data.done / data.error are definitive signals — do NOT gate on
+                // _hasUsableResults so a missing zip never keeps the UI stuck.
+                const readyFromStatus = Boolean(
+                    data.done ||
+                    data.error ||
+                    (_hasUsableResults(data.results) && (
+                        (hasPct && data.pct >= 100) ||
+                        /complete/i.test(String(data.stage || '')) ||
+                        /job completed successfully|pipeline core completed/i.test(String(data.last_log || ''))
+                    ))
+                );
+
+                if (readyFromStatus) {
+                    _latestStage = data.error ? 'Pipeline error' : 'Complete';
+                    if (!data.error) _setBarPct(100);
+                    else if (hasPct) _setBarPct(Math.max(_displayPct, data.pct));
                     else _updateProgressText();
 
-                    if (data.done) {
-                        clearInterval(_pollInterval);
-                        _pollInterval = null;
-                        // Flush remaining log lines before completing
+                    _stopStatusPolling();
+                    stopLogPolling();
+                    try {
                         await _fetchLogs(jobId, true);
-                        stopLogPolling();
-                        _latestStage = data.error ? 'Pipeline error' : (_latestStage || 'Complete');
-                        if (!data.error) _setBarPct(100);
-                        onPipelineComplete(data);
-                    }
-                } catch (_) {}
-            }, 1200);
+                    } catch (_) {}
+                    onPipelineComplete({
+                        success: true,
+                        done: true,
+                        error: data.error || null,
+                        results: data.results || {},
+                        _jobId: jobId
+                    });
+                    return;
+                }
+
+                if (!hasPct) _updateProgressText();
+            } catch (_) {
+                // Keep polling; transient network/cache hiccups should not freeze the UI.
+            } finally {
+                _statusPollInFlight = false;
+                if (_pollJobId === jobId) _scheduleStatusPoll(jobId, 1200);
+            }
+        }
+
+        function startPolling(jobId) {
+            _stopStatusPolling();
+            stopLogPolling();
+            _pollJobId = jobId;
+            _statusSeq = -1;
+            _statusPollInFlight = false;
+            _completionHandled = false;
+            _finalizeAttempts = 0;
+            _clearFinalizeTimer();
+            _latestStage = 'Initializing pipeline';
+            _setBarPct(1);
+            _scheduleStatusPoll(jobId, 0);
 
             // ── Log poll — runs silently in background (console hidden from users) ─
             _logOffset = 0;
@@ -1789,17 +2154,18 @@
         }
 
         function stopPolling() {
-            if (_pollInterval) {
-                clearInterval(_pollInterval);
-                _pollInterval = null;
-            }
+            _stopStatusPolling();
             stopLogPolling();
+            _clearFinalizeTimer();
+            _completionHandled = false;
+            _finalizeAttempts = 0;
             _logOffset = 0;
         }
 
         // ── Console / log helpers ────────────────────────────────────────
         let _logPollInterval = null;
         let _logOffset       = 0;
+        const MAX_CONSOLE_LINES = 350;
 
         function stopLogPolling() {
             if (_logPollInterval) {
@@ -1808,30 +2174,116 @@
             }
         }
 
+        function _isNoiseLogLine(line) {
+            const text = String(line || '');
+            return /"(GET|HEAD|OPTIONS)\s+\/(?:pipeline-status|pipeline-log|favicon\.ico)\b/i.test(text);
+        }
+
         async function _fetchLogs(jobId, isFinal) {
             try {
-                const url = `/pipeline-log?job_id=${encodeURIComponent(jobId)}&offset=${_logOffset}`;
-                const res  = await fetch(url, { cache: 'no-store' });
+                const url = `/pipeline-log?job_id=${encodeURIComponent(jobId)}&offset=${_logOffset}&_=${Date.now()}`;
+                const res  = await fetch(url, {
+                    cache: 'no-store',
+                    headers: { 'Cache-Control': 'no-store' }
+                });
                 const data = await res.json();
-                if (!data.success || !data.lines || data.lines.length === 0) return;
-                _appendConsoleLogs(data.lines);
-                _logOffset = data.total;           // advance cursor
+                if (!data.success) return;
+
+                const lines = Array.isArray(data.lines) ? data.lines.filter(line => !_isNoiseLogLine(line)) : [];
+                if (typeof data.dropped === 'number' && data.dropped > 0) {
+                    lines.unshift(`[log] ${data.dropped} older lines skipped to keep the page responsive`);
+                }
+                if (lines.length > 0) {
+                    _appendConsoleLogs(lines);
+                }
+                _logOffset = data.total;           // advance cursor even when trimmed
             } catch (_) {}
+        }
+
+        // stageOnly=true  → only update the stage label, never touch the progress bar.
+        //                    Used when called from _pollStatus where data.pct (server)
+        //                    is already the authoritative value and must not be overridden
+        //                    by a potentially older log line.
+        // stageOnly=false → full update (bar + stage). Used from _appendConsoleLogs
+        //                    where the log poll is the only source of progress data.
+        function _syncProgressFromLogLine(line, stageOnly) {
+            const text = String(line || '');
+            if (!text) return;
+
+            const progressMatch = text.match(/Progress\s+(\d+)%\s*[—-]\s*(.+)$/i);
+            if (progressMatch) {
+                const pct = Number(progressMatch[1]);
+                const stage = (progressMatch[2] || '').trim();
+                if (stage) _latestStage = stage;
+                if (!stageOnly) {
+                    if (Number.isFinite(pct)) _setBarPct(Math.max(_displayPct, pct));
+                    else _updateProgressText();
+                } else {
+                    _updateProgressText();
+                }
+                if (Number.isFinite(pct) && pct >= 100 && _pollJobId) {
+                    _scheduleFinalize(_pollJobId, 0);
+                }
+                return;
+            }
+
+            if (/STEP\s+10:\s+AutoDock Vina Molecular Docking/i.test(text) ||
+                /Docking at (?:Pocket|BLIND)/i.test(text) ||
+                /Docking Job \d+ Ligands/i.test(text)) {
+                _latestStage = 'Running molecular docking…';
+                if (!stageOnly) _setBarPct(Math.max(_displayPct, 58));
+                else _updateProgressText();
+                return;
+            }
+
+            if (/Generating results CSV & ZIP/i.test(text) ||
+                /docking_results_ranked\.csv/i.test(text) ||
+                /Found \d+ docked ligands/i.test(text)) {
+                _latestStage = 'Generating results CSV & ZIP…';
+                if (!stageOnly) _setBarPct(Math.max(_displayPct, 92));
+                else _updateProgressText();
+                if (/docking_results_ranked\.csv/i.test(text) && _pollJobId) {
+                    _scheduleFinalize(_pollJobId, 250);
+                }
+                return;
+            }
+
+            if (/Job completed successfully/i.test(text) ||
+                /Pipeline core completed/i.test(text)) {
+                _latestStage = 'Complete';
+                if (!stageOnly) _setBarPct(100);
+                else _updateProgressText();
+                if (_pollJobId) _scheduleFinalize(_pollJobId, 0);
+                return;
+            }
+
+            if (/All Ligands ZIP:|CSV Report:/i.test(text)) {
+                if (_pollJobId) _scheduleFinalize(_pollJobId, 250);
+            }
         }
 
         function _appendConsoleLogs(lines) {
             const body = document.getElementById('consoleBody');
-            if (!body) return;
+            const fragment = body ? document.createDocumentFragment() : null;
             lines.forEach(line => {
-                const div = document.createElement('div');
-                div.className = 'log-line'
-                    + (/error|fail|❌/i.test(line) ? ' err'  : '')
-                    + (/warn|⚠/i.test(line)       ? ' warn' : '');
-                div.textContent = line;
-                body.appendChild(div);
+                _syncProgressFromLogLine(line);
+                if (body) {
+                    const div = document.createElement('div');
+                    div.className = 'log-line'
+                        + (/error|fail|❌/i.test(line) ? ' err'  : '')
+                        + (/warn|⚠/i.test(line)       ? ' warn' : '');
+                    div.textContent = line;
+                    fragment.appendChild(div);
+                }
             });
+            if (body && fragment) {
+                body.appendChild(fragment);
+                while (body.childElementCount > MAX_CONSOLE_LINES) {
+                    body.removeChild(body.firstElementChild);
+                }
+            }
             // Auto-scroll to bottom
-            body.scrollTop = body.scrollHeight;
+            if (body) body.scrollTop = body.scrollHeight;
         }
 
         function _openConsole() {
@@ -1850,7 +2302,31 @@
             toggle.classList.toggle('open', isOpen);
         }
 
-        function onPipelineComplete(data) {
+        async function onPipelineComplete(data) {
+            if (_completionHandled) return;
+            _completionHandled = true;
+            _clearFinalizeTimer();
+            _stopStatusPolling();
+            stopLogPolling();
+
+            // If results are empty (race: done flag arrived before _job_set with
+            // results), do up to 5 re-fetches spaced 600 ms apart to get them.
+            if (!data.error && !_hasUsableResults(data.results)) {
+                const jobId = data._jobId || _pollJobId || null;
+                if (jobId) {
+                    for (let attempt = 0; attempt < 5; attempt++) {
+                        await new Promise(r => setTimeout(r, 600));
+                        try {
+                            const fresh = await _fetchStatusSnapshot(jobId);
+                            if (fresh.success && _hasUsableResults(fresh.results)) {
+                                data = { ...data, results: fresh.results };
+                                break;
+                            }
+                        } catch (_) {}
+                    }
+                }
+            }
+
             document.getElementById('progressSection').style.display = 'none';
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = false; submitBtn.textContent = 'Process';
@@ -1866,10 +2342,10 @@
                 jobCount:   jobCards.length,
                 error:      data.error || null,
                 scaffold:   (data.results || {}).scaffold || null,
-                ligands:    (data.results || {}).ligands  || null,
-                affinity:   (data.results || {}).affinity || null,
+                ligands:    (data.results || {}).ligands  ?? null,
+                affinity:   (data.results || {}).affinity ?? null,
             };
-            addHistoryEntry(entry);
+            await addHistoryEntry(entry);
             // ────────────────────────────────────────────────────────
 
             if (data.error) {
@@ -1879,9 +2355,9 @@
                 return;
             }
             const r = data.results || {};
-            document.getElementById('resultScaffold').textContent = r.scaffold || 'N/A';
-            document.getElementById('resultLigands').textContent  = r.ligands  || '0';
-            document.getElementById('resultAffinity').textContent = r.affinity || 'N/A';
+            document.getElementById('resultScaffold').textContent = r.scaffold ?? 'N/A';
+            document.getElementById('resultLigands').textContent  = r.ligands  ?? '0';
+            document.getElementById('resultAffinity').textContent = r.affinity ?? 'N/A';
             document.getElementById('resultsContainer').classList.add('show');
             if (r.csv) {
                 const a = document.getElementById('downloadCSV');
@@ -2370,7 +2846,18 @@
     const TUT_TOTAL = 7;
     let tutCurrent  = 1;
 
+    function ensureTutorialButtonReady() {
+        const btn = document.getElementById('tutorialBtn');
+        if (!btn) return;
+        btn.type = 'button';
+        btn.disabled = false;
+        btn.removeAttribute('disabled');
+        btn.setAttribute('aria-disabled', 'false');
+        btn.onclick = openTutorial;
+    }
+
     function openTutorial() {
+        ensureTutorialButtonReady();
         tutGoto(1);
         document.getElementById('tutorialOverlay').classList.add('visible');
         document.body.style.overflow = 'hidden';
@@ -2445,5 +2932,20 @@
             btn.onclick = () => tutGoto(i);
             container.appendChild(btn);
         }
+    })();
+
+    ensureTutorialButtonReady();
+    (() => {
+        const tutorialBtn = document.getElementById('tutorialBtn');
+        if (!tutorialBtn || typeof MutationObserver === 'undefined') return;
+        const observer = new MutationObserver(() => {
+            if (tutorialBtn.disabled || tutorialBtn.getAttribute('aria-disabled') === 'true') {
+                ensureTutorialButtonReady();
+            }
+        });
+        observer.observe(tutorialBtn, {
+            attributes: true,
+            attributeFilter: ['disabled', 'aria-disabled', 'type']
+        });
     })();
     </script>
