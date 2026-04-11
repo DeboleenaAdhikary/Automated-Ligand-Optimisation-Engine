@@ -103,7 +103,7 @@ export VINA_PATH=/full/path/to/vina
 
 #### P2Rank
 
-Install P2Rank so that the `prank` executable is discoverable. The app can auto-locate common installs such as:
+Install P2Rank so that the `prank` executable is discoverable. Please install the latest version of Java to be able to execute prank processes. The app can auto-locate common installs such as:
 
 - `~/Downloads/p2rank_*`
 - a nearby extracted `p2rank_*` directory
