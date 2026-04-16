@@ -1390,7 +1390,14 @@ class EnzymeLigandProcessor:
 
         return fragments, invalid_count
 
-    def substitute_fragments(self, fragment_file, max_fragment_volume=None):
+    def substitute_fragments(
+        self,
+        fragment_file,
+        max_fragment_volume=None,
+        progress_cb=None,
+        progress_start=28,
+        progress_end=45,
+    ):
         """
         Substitute fragments from the library into each substitution job.
 
@@ -1457,8 +1464,10 @@ class EnzymeLigandProcessor:
 
         # ── Per-job processing ────────────────────────────────────────────────
         job_stats = {}
+        job_count = max(1, len(self.substitution_jobs))
+        stage_span = max(1.0, float(progress_end - progress_start))
 
-        for job in self.substitution_jobs:
+        for job_idx, job in enumerate(self.substitution_jobs, start=1):
             print(f"\n{'-'*60}")
             print(f"Processing Job {job.job_id}")
             print(f"{'-'*60}")
@@ -1466,6 +1475,19 @@ class EnzymeLigandProcessor:
             self._prime_job_screening_context(job.job_id, remaining_volume=max_fragment_volume)
             min_mw, max_mw = job.mw_range
             print(f"  MW range : {min_mw:.0f} – {max_mw:.0f} Da")
+
+            job_progress_start = progress_start + (((job_idx - 1) / job_count) * stage_span)
+            job_progress_end = progress_start + ((job_idx / job_count) * stage_span)
+
+            def _report_job_progress(processed, total):
+                if not callable(progress_cb) or total <= 0:
+                    return
+                job_span = max(1.0, job_progress_end - job_progress_start)
+                pct = job_progress_start + ((processed / total) * job_span)
+                progress_cb(
+                    int(round(min(progress_end, pct))),
+                    f"Running fragment substitution... (Job {job.job_id}: {processed:,}/{total:,})"
+                )
 
             # ── Retrieve fragments for this MW window ─────────────────
             if use_csv:
@@ -1500,16 +1522,27 @@ class EnzymeLigandProcessor:
 
                 # Optional volume filter on the (small) window subset
                 if max_fragment_volume is not None and max_fragment_volume > 0:
-                    vf, vs = [], 0
-                    for frag in fragment_data:
-                        fvol = self.calculate_mol_volume(frag['smiles'].replace('[*]', ''))
-                        if fvol is None or fvol <= max_fragment_volume:
-                            vf.append(frag)
-                        else:
-                            vs += 1
-                    if vs:
-                        print(f"  🔬 Volume filter removed {vs} more fragments")
-                    fragment_data = vf
+                    # For the <=350 Da fragment windows used by the web app, a
+                    # cutoff in the multi-thousand-A^3 range is effectively
+                    # non-restrictive. Running 3D volume estimation on ~82k
+                    # fragments in that case takes a very long time while
+                    # filtering nothing useful.
+                    if max_fragment_volume >= 2000:
+                        print(
+                            "  ⏭ Skipping volume filter: pocket limit is very permissive "
+                            f"({max_fragment_volume:.1f} A^3)"
+                        )
+                    else:
+                        vf, vs = [], 0
+                        for frag in fragment_data:
+                            fvol = self.calculate_mol_volume(frag['smiles'].replace('[*]', ''))
+                            if fvol is None or fvol <= max_fragment_volume:
+                                vf.append(frag)
+                            else:
+                                vs += 1
+                        if vs:
+                            print(f"  🔬 Volume filter removed {vs} more fragments")
+                        fragment_data = vf
 
             else:
                 # Legacy .txt mode — MW filter already applied above
@@ -1533,8 +1566,11 @@ class EnzymeLigandProcessor:
             # ── Fragment substitution ─────────────────────────────────
             ligands_generated = []
             failed_count = 0
+            total_fragments = len(fragment_data)
+            _report_job_progress(0, total_fragments)
+            last_progress_emit = time.time()
 
-            for frag in fragment_data:
+            for frag_idx, frag in enumerate(fragment_data, start=1):
                 try:
                     combined_smiles = self._combine_scaffold_fragment(
                         job.smiles_with_attachment,
@@ -1552,6 +1588,15 @@ class EnzymeLigandProcessor:
                 except Exception as e:
                     failed_count += 1
                     print(f"  ❌ Exception with fragment {frag['index']}: {e}")
+
+                should_emit_progress = (
+                    frag_idx == total_fragments or
+                    frag_idx % 2000 == 0 or
+                    (time.time() - last_progress_emit) >= 1.5
+                )
+                if should_emit_progress:
+                    _report_job_progress(frag_idx, total_fragments)
+                    last_progress_emit = time.time()
 
             print(f"  ✓ Generated {len(ligands_generated):,} ligands"
                   + (f"  (⚠ {failed_count} failed)" if failed_count else ""))
@@ -1596,6 +1641,7 @@ class EnzymeLigandProcessor:
         --------
         str : Combined SMILES with ALL dummies removed, clean for OpenBabel
         """
+        verbose = bool(getattr(self, 'interactive', False))
         try:
             from rdkit.Chem import RWMol, BondType
             
@@ -1604,7 +1650,8 @@ class EnzymeLigandProcessor:
             fragment_mol = Chem.MolFromSmiles(fragment_smiles)
             
             if scaffold_mol is None or fragment_mol is None:
-                print(f"    ❌ Could not parse SMILES")
+                if verbose:
+                    print(f"    ❌ Could not parse SMILES")
                 return None
             
             def _find_attachment(mol, isotope_zero_only):
@@ -1634,7 +1681,8 @@ class EnzymeLigandProcessor:
             )
 
             if None in [scaf_subst_dummy, scaf_attach_atom, frag_dummy, frag_attach_atom]:
-                print(f"    ❌ Could not find attachment points")
+                if verbose:
+                    print(f"    ❌ Could not find attachment points")
                 return None
             
             # Preserve full atom/bond metadata by combining the intact molecules
@@ -1686,40 +1734,48 @@ class EnzymeLigandProcessor:
             try:
                 Chem.SanitizeMol(mol)
             except Chem.KekulizeException as e:
-                print(f"    ⚠️ Kekulization failed: {e}")
+                if verbose:
+                    print(f"    ⚠️ Kekulization failed: {e}")
                 # Try alternative sanitization without kekulization
                 try:
                     Chem.SanitizeMol(mol, sanitizeOps=Chem.SanitizeFlags.SANITIZE_ALL^Chem.SanitizeFlags.SANITIZE_KEKULIZE)
-                    print(f"    ✓ Using alternative sanitization (no kekulize)")
+                    if verbose:
+                        print(f"    ✓ Using alternative sanitization (no kekulize)")
                 except Exception as e2:
-                    print(f"    ❌ Sanitization failed completely: {e2}")
+                    if verbose:
+                        print(f"    ❌ Sanitization failed completely: {e2}")
                     return None
             except Exception as e:
-                print(f"    ❌ Sanitization error: {e}")
+                if verbose:
+                    print(f"    ❌ Sanitization error: {e}")
                 return None
             
             # Try to assign stereochemistry
             try:
                 Chem.AssignStereochemistry(mol, cleanIt=True, force=True)
             except Exception as e:
-                print(f"    ⚠️ Could not assign stereochemistry: {e}")
+                if verbose:
+                    print(f"    ⚠️ Could not assign stereochemistry: {e}")
                 # Continue anyway
             
             # Get clean SMILES (no dummies!)
             try:
                 output_smiles = Chem.MolToSmiles(mol, isomericSmiles=True)
             except Exception as e:
-                print(f"    ❌ Could not generate SMILES: {e}")
+                if verbose:
+                    print(f"    ❌ Could not generate SMILES: {e}")
                 return None
             
             # CRITICAL CHECK: Make sure no dummies remain
             if '[*]' in output_smiles or '(*)' in output_smiles:
-                print(f"    ❌ ERROR: Dummy atoms still present in output!")
+                if verbose:
+                    print(f"    ❌ ERROR: Dummy atoms still present in output!")
                 return None
             
             # Check for disconnected fragments
             if '.' in output_smiles:
-                print(f"    ❌ ERROR: Disconnected fragments")
+                if verbose:
+                    print(f"    ❌ ERROR: Disconnected fragments")
                 return None
             
             # Verify atom count
@@ -1735,18 +1791,21 @@ class EnzymeLigandProcessor:
             actual = mol.GetNumAtoms()
             
             if expected != actual:
-                print(f"    ⚠️ WARNING: Atom count mismatch (expected {expected}, got {actual})")
-            else:
+                if verbose:
+                    print(f"    ⚠️ WARNING: Atom count mismatch (expected {expected}, got {actual})")
+            elif verbose:
                 print(f"    ✓ Atom count correct: {actual} atoms")
             
-            print(f"    ✓ Clean SMILES: {output_smiles[:80]}...")
+            if verbose:
+                print(f"    ✓ Clean SMILES: {output_smiles[:80]}...")
             
             return output_smiles
             
         except Exception as e:
-            print(f"    ❌ Exception: {e}")
-            import traceback
-            traceback.print_exc()
+            if verbose:
+                print(f"    ❌ Exception: {e}")
+                import traceback
+                traceback.print_exc()
             return None
     
     def _save_ligands_to_files(self, job_id, ligands):
@@ -3170,7 +3229,8 @@ class EnzymeLigandProcessor:
             print("\n❌ AutoDock Vina not found!")
             print("   Install: conda install -c conda-forge vina")
             print("\n💡 Saving shell scripts for manual execution...")
-            return self._generate_docking_scripts(pockets or [], pdbqt_results)
+            selected_pockets = self._select_pockets_for_docking(pockets or [])
+            return self._generate_docking_scripts(selected_pockets, pdbqt_results)
 
         # Decide: P2Rank/fpocket-guided or blind?
         pocket_ok, reason = self._validate_pockets(pockets or [])
@@ -3255,15 +3315,24 @@ class EnzymeLigandProcessor:
 
     def _select_pockets_for_docking(self, pockets):
         """
-        Automatically dock at ALL pockets to find the best binding site.
-        No user prompts - fully automatic.
+        Keep at most the top 3 ranked pockets for docking.
+        Pocket lists are already sorted best-first by the detection step.
         """
         if not pockets:
             return []
-        
-        # Dock at ALL pockets — will select best based on actual affinities later
-        print(f"\n  → Docking at all {len(pockets)} pocket(s) to find best binding site")
-        return pockets
+
+        max_pockets = 3
+        selected_pockets = pockets[:max_pockets]
+
+        if len(pockets) > max_pockets:
+            print(
+                f"\n  → Found {len(pockets)} pocket(s); docking only the top "
+                f"{len(selected_pockets)} ranked pocket(s)"
+            )
+        else:
+            print(f"\n  → Docking at all {len(selected_pockets)} detected pocket(s)")
+
+        return selected_pockets
 
     def _dock_at_pocket(self, pocket, pdbqt_results, blind=False, progress_cb=None,
                         progress_start=58, progress_end=92, progress_state=None,
@@ -4737,7 +4806,10 @@ class EnzymeLigandProcessor:
                 _rpt(28, 'Running fragment substitution…')
                 fragment_stats = self.substitute_fragments(
                     fragment_file,
-                    max_fragment_volume=max_fragment_volume
+                    max_fragment_volume=max_fragment_volume,
+                    progress_cb=progress_cb,
+                    progress_start=28,
+                    progress_end=45
                 )
 
         # Step 8: Convert to PDBQT
