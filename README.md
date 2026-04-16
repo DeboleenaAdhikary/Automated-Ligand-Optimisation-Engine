@@ -1,178 +1,258 @@
-# ALOE
+# ALOE — Automated Ligand Optimisation Engine
 
-ALOE is a Flask-based web application for enzyme-ligand design, scaffold-guided analog generation, and docking-driven hit ranking. Starting from an enzyme `.pdb` file and a ligand `.sdf` file, the app lets you visualize a scaffold, mark substitution sites interactively, generate fragment-substituted candidates, run docking with AutoDock Vina, and review ranked outputs directly in the browser.
+---
 
-## Key capabilities
+## Overview
 
-- Upload an enzyme structure (`.pdb`) and ligand structure (`.sdf`)
-- Choose between using the original ligand as the scaffold or extracting a BRICS-derived scaffold
-- Interactively mark up to 3 carbon substitution positions in a 3D viewer
-- Generate substitution jobs from the bundled fragment library with molecular-weight filtering
-- Prepare ligands and receptors automatically for docking
-- Detect pockets with P2Rank and dock candidates with AutoDock Vina
-- Download ranked docking outputs as CSV and ZIP bundles
-- Persist user login and run history in the web interface
+**ALOE** is a browser-based, zero-installation web application that automates fragment-based ligand design for enzyme targets. It integrates a biologically curated chemical fragment library (~86,000 entries derived from BRENDA enzyme substrates), automated binding-pocket detection, and molecular docking into a single end-to-end pipeline — all accessible from a standard web browser without any local software installation by the end user.
 
-## Golden validation benchmark
+The project addresses a core bottleneck in computational Fragment-Based Drug Discovery (FBDD): the need for domain expertise to orchestrate fragmentation, 3D coordinate generation, pocket detection, and docking into a coherent workflow. ALOE solves this by wrapping all stages in a REST API backend and a reactive single-page frontend with real-time progress feedback.
 
-A reference validation case has been established using **1TCA + ethyl butyrate**.
+---
 
-### Validation summary
+## Key Results
 
-| Case | System | Best predicted affinity (kcal/mol) | Evidence |
-| --- | --- | ---: | --- |
-| Baseline ligand | 1TCA + ethyl butyrate | `-3.672` | `validation/Validation_exp.png` |
-| Best ALOE-ranked redesigned hit | 1TCA + `ligand_402` | `-8.841` | `validation/docking_results_ranked-10.csv` |
-| Improvement over baseline | `ligand_402` vs ethyl butyrate | `5.169` kcal/mol more favorable | Calculated from the two values above |
+| Enzyme | PDB | Baseline Ligand | Baseline (kcal/mol) | Best ALOE Ligand (kcal/mol) | Improvement |
+|---|---|---|---|---|---|
+| Acetolactate Synthase | 1BFK | Methyl mandelate | −4.128 | −7.628 | +3.500 (+84.7%) |
+| *Thermomyces lanuginosus* Lipase | 1TCA | Ethyl butyrate | −3.672 | −8.841 | +5.169 (+140.8%) |
+| Alpha-Glucosidase | 1BAG | DNJ | −3.436 | −10.312 | +6.876 (+200.1%) |
 
-### Top redesigned hits from the ranked docking CSV
+---
 
-| Rank | Candidate | Conformation 1 affinity (kcal/mol) |
-| --- | --- | ---: |
-| 1 | `ligand_402` | `-8.841` |
-| 2 | `ligand_275` | `-8.571` |
-| 3 | `ligand_274` | `-8.555` |
+## Architecture
 
-> Note: these values are AutoDock Vina docking scores (predicted affinities), not experimental binding constants.
+ALOE uses a three-tier design:
 
-## Repository layout
-
-```text
-.
-├── app.py
-├── index.html
-├── 350_frag_sorted.csv
-├── 350_frag_cleaned.txt
-├── static/
-│   └── ALOE_logo.png
-├── validation/
-│   ├── Validation_exp.png
-│   └── docking_results_ranked-10.csv
-└── enzyme_processor_results/
+```
+┌─────────────────────────────────────────┐
+│   Presentation Layer                    │
+│   index.html  (HTML / CSS / JavaScript) │
+│   3Dmol.js v2.0.4  ·  SSE progress     │
+└────────────────┬────────────────────────┘
+                 │ REST API (HTTP/JSON)
+┌────────────────▼────────────────────────┐
+│   Application Layer                     │
+│   app.py  (Flask · Python 3.10)         │
+│   RDKit · OpenBabel · BioPython         │
+│   AutoDock Vina · P2Rank               │
+└────────────────┬────────────────────────┘
+                 │ File I/O
+┌────────────────▼────────────────────────┐
+│   Data Layer                            │
+│   Sorted-CSV fragment library           │
+│   UUID-based per-session temp dirs      │
+└─────────────────────────────────────────┘
 ```
 
-## Prerequisites
+The frontend communicates with the backend exclusively via predefined HTTP endpoints, making the two layers independently deployable (e.g., frontend on GitHub Pages / Netlify; backend on AWS EC2, Google Cloud Run, or a university HPC node).
 
-Make sure the following are installed before running the app:
+---
 
-- Python 3.9 or newer
-- Flask
-- RDKit
-- Biopython
-- Pillow
-- Open Babel
-  - Python bindings for `openbabel`
-  - Command-line executable `obabel`
-- AutoDock Vina
-  - executable `vina` available on `PATH`, or exposed via `VINA_PATH`
-- P2Rank
-  - executable `prank` available for automatic pocket prediction
+## Features
 
-The repository also expects the bundled fragment library files to be present:
+- **Interactive 3D Molecular Viewer** — 3Dmol.js surface/cartoon enzyme rendering with ball-and-stick ligand display; click-to-select substitution points directly on the 3D structure.
+- **BRICS Fragmentation** — RDKit `BRICSDecompose` generates scaffold + attachment points from any uploaded ligand SMOL/SDF.
+- **Fragment Library (86,000 entries)** — Built from >1.36 lakh BRENDA substrate molecules using three complementary fragmentation algorithms: BRICS, RECAP, and rotatable single-bond cleavage. Stored as a sorted CSV enabling binary-search retrieval by molecular weight range.
+- **8-Stage Automated Docking Pipeline**:
+  1. Scaffold SMILES generation & attachment-point assignment
+  2. Apo-enzyme preparation (chain A selection via BioPython)
+  3. Binding-pocket detection via **P2Rank** (fpocket fallback / blind docking fallback)
+  4. Fragment substitution across user-defined MW windows
+  5. Multi-fallback 3D coordinate generation (ETKDGv3 → UFF → OpenBabel)
+  6. PDBQT conversion via OpenBabel
+  7. AutoDock Vina docking (parallelised, threaded)
+  8. Result ranking, ZIP packaging, and download
+- **Real-Time Progress** — Server-Sent Events (SSE) stream pipeline stage, percentage, and log messages live to the browser.
+- **User Authentication & Job History** — Session-based login, run history, and legacy-import support.
+- **7-Step Interactive Tutorial Overlay** — Embedded SVG diagrams walk new users through the full workflow without leaving the page.
+- **Cross-Platform Tool Discovery** — Auto-locates Vina and P2Rank executables across conda envs, Homebrew, system paths, and `VINA_PATH` / user-set overrides.
 
-- `350_frag_sorted.csv`
-- `350_frag_cleaned.txt`
+---
 
-## Installation
+## Fragment Library Construction
 
-### Recommended: Conda environment
+| Stage | Detail |
+|---|---|
+| Source | BRENDA Enzyme Database (.mol files, all 6 EC classes) |
+| Raw substrates | ~140,000 |
+| After sanitisation | ~136,000 |
+| Fragmentation methods | BRICS · RECAP · Single-bond cleavage |
+| Post-processing | Canonical SMILES · deduplication · valence/ring/radical filter · Lipinski-RO3 filter |
+| Final library size | **~86,000 unique fragments** |
+| Storage format | Sorted CSV (binary-search by Avg_MW) |
+
+---
+
+## Tech Stack
+
+| Component | Technology |
+|---|---|
+| Backend framework | Flask (Python 3.10) |
+| Cheminformatics | RDKit |
+| Format conversion / 3D gen | OpenBabel 3.1.0 |
+| Structural biology | BioPython |
+| Molecular docking | AutoDock Vina ≥ 1.2.5 |
+| Pocket detection | P2Rank |
+| 3D visualisation | 3Dmol.js v2.0.4 |
+| Frontend | Vanilla HTML5 / CSS3 / JavaScript (single-page) |
+| Concurrency | Python `ThreadPoolExecutor` |
+| Progress streaming | Server-Sent Events (SSE) |
+
+---
+
+## Requirements
+
+### Python packages
+
+```
+flask
+rdkit
+openbabel-wheel
+biopython
+pillow
+werkzeug
+```
+
+Install with:
 
 ```bash
-conda create -n aloe python=3.10 -y
-conda activate aloe
-conda install -c conda-forge flask rdkit biopython pillow openbabel vina
+pip install flask rdkit openbabel-wheel biopython pillow --break-system-packages
 ```
 
-### Pip-based alternative
+### External binaries (must be installed separately)
 
-If you are not using Conda, the Python packages can also be installed with pip:
+| Tool | Purpose | Notes |
+|---|---|---|
+| **AutoDock Vina** ≥ 1.2.5 | Molecular docking | Set `VINA_PATH` env var if not on `PATH` |
+| **P2Rank** | Binding-pocket detection | Unzip anywhere; ALOE auto-discovers `p2rank_*` directories |
+
+### Python version
+
+Python **3.10** or later is recommended.
+
+### Java installation
+
+Please install Java since it is required to run P2Rank.
+
+---
+
+## Installation & Usage
+
+### 1. Clone the repository
 
 ```bash
-pip install flask biopython pillow rdkit openbabel-wheel
+git clone https://github.com/<your-username>/aloe.git
+cd aloe
 ```
 
-### External tools
-
-#### AutoDock Vina
-
-Make sure `vina` is on your shell `PATH`. If it is installed in a non-standard location, set:
+### 2. Install Python dependencies
 
 ```bash
-export VINA_PATH=/full/path/to/vina
+pip install flask rdkit openbabel-wheel biopython pillow --break-system-packages
 ```
 
-#### P2Rank
+### 3. Place the fragment library
 
-Install P2Rank so that the `prank` executable is discoverable. Please install the latest version of Java to be able to execute prank processes. The app can auto-locate common installs such as:
+Ensure `fragment_library.csv` (the sorted-CSV file) is located in the same directory as `app.py`. The backend resolves paths relative to the script location automatically.
 
-- `~/Downloads/p2rank_*`
-- a nearby extracted `p2rank_*` directory
+### 4. Configure external tools (optional)
 
-## Running the application
+```bash
+# If Vina is not on your PATH:
+export VINA_PATH=/path/to/vina
 
-From the project directory:
+# P2Rank: just unzip the distribution anywhere under ~/ or next to app.py
+# ALOE will auto-scan common locations (~/Downloads/p2rank_*, etc.)
+```
+
+### 5. Run the server
 
 ```bash
 python app.py
 ```
 
-The server prints the local URL in the terminal, for example:
+ALOE automatically finds a free port starting from 5001 (port 5000 is skipped to avoid macOS AirPlay conflicts) and prints the URL:
 
-```text
-http://127.0.0.1:5001
+```
+============================================================
+Enzyme Drug Discovery Pipeline - Server Starting
+============================================================
+
+Server URL: http://127.0.0.1:5001
 ```
 
-The app automatically selects a free port starting at `5001`, so use the exact URL shown in the terminal.
+### 6. Open in your browser
 
-## Web workflow
+Navigate to the printed URL. The single-page app is served directly by Flask.
 
-1. Open the local server URL in your browser.
-2. Create an account or sign in if you want persistent run history.
-3. Upload:
-   - an enzyme file in `.pdb` format
-   - a ligand file in `.sdf` format
-4. Choose scaffold mode:
-   - use the original ligand as-is, or
-   - generate a BRICS-derived scaffold
-5. Mark carbon atoms in the 3D viewer to define substitution sites.
-6. Review the generated substitution jobs.
-7. Click **Process** to run:
-   - scaffold preparation
-   - apo enzyme preparation
-   - pocket prediction
-   - fragment substitution
-   - PDBQT conversion
-   - AutoDock Vina docking
-   - result ranking and packaging
-8. Download the ranked CSV and ZIP outputs from the results panel.
+---
 
-## Outputs
+## API Endpoints
 
-The pipeline writes results under:
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/` | Serve the frontend SPA |
+| `POST` | `/generate-scaffold` | Parse uploaded PDB/SDF, run BRICS, return scaffold SMILES |
+| `POST` | `/generate-job-smiles` | Build substitution-job SMILES with `[*]` attachment points |
+| `POST` | `/start-pipeline` | Launch the 8-stage docking pipeline; returns `job_id` |
+| `GET` | `/pipeline-status` | Poll job status (stage, percent, done flag) |
+| `GET` | `/pipeline-log` | Cursor-based incremental log fetch for live console output |
+| `GET` | `/download` | Download result ZIP for a completed job |
+| `GET/POST/DELETE` | `/auth/history` | Job history CRUD |
+| `POST` | `/auth/register` · `/auth/login` · `/auth/logout` | User auth |
 
-```text
-enzyme_processor_results/jobs/<job_id>/
+All endpoints return JSON. Binary downloads use `send_file` with `as_attachment=True`.
+
+---
+
+## Validation Enzymes
+
+- **1BFK** — Acetolactate synthase (ALS); herbicide target; baseline ligand: methyl mandelate
+- **1TCA** — *Thermomyces lanuginosus* Lipase (TLL); industrial ester synthesis; baseline: ethyl butyrate
+- **1BAG** — Alpha-glucosidase (GH31 family); anti-diabetic target; baseline: deoxynojirimycin (DNJ)
+
+---
+
+## Repository Structure
+
+```
+aloe/
+├── app.py                         # Flask backend — full pipeline logic
+├── index.html                     # Single-page frontend
+├── fragment_library.csv           # Sorted-CSV fragment library (~86k entries)
+├── 22BBT0006_Project2Final_Draft.pdf  # Full project report
+└── README.md
 ```
 
-Common output artifacts include:
+---
 
-- `docking_results_ranked.csv`
-- `top_ligands.zip`
-- intermediate uploaded files and docking outputs per job
+## Abbreviations
 
-The web app also creates small persistence files for authentication and run history:
+| Abbreviation | Meaning |
+|---|---|
+| ALOE | Automated Ligand Optimisation Engine |
+| BRICS | Breaking of Retrosynthetically Interesting Chemical Substructures |
+| BRENDA | Braunschweig Enzyme Database |
+| FBDD | Fragment-Based Drug Discovery |
+| FBLD | Fragment-Based Ligand Design |
+| HTS | High-Throughput Screening |
+| P2Rank | Protein Binding Site Prediction using Random Forests |
+| PDBQT | PDB with partial charges and torsion tree (AutoDock format) |
+| RECAP | Retrosynthetic Combinatorial Analysis Procedure |
+| SBDD | Structure-Based Drug Design |
+| SSE | Server-Sent Events |
+| TLL | *Thermomyces lanuginosus* Lipase |
 
-- `aloe_users.json`
-- `aloe_history.json`
-- `aloe_secret.key`
+---
 
-## Validation artifacts
+## Author
 
-- Screenshot of baseline validation run: [validation/Validation_exp.png](validation/Validation_exp.png)
-- Ranked docking CSV used for the redesigned-hit comparison: [validation/docking_results_ranked-10.csv](validation/docking_results_ranked-10.csv)
+**Deboleena Adhikary**
+B.Tech. Biotechnology  
 
-## Notes
+---
 
-- ALOE is intended for computational screening and prioritization.
-- Docking scores should be interpreted as relative ranking signals, not direct experimental binding measurements.
-- If `vina`, `obabel`, or `prank` are missing, the server logs will indicate which executable could not be found.
+## License
+
+This project was submitted as an academic capstone. Please contact the author before reuse or redistribution.
