@@ -1,0 +1,57 @@
+structure of the folder -
+
+the main folder contains the two main application files (app.py and index.html), the fragment library CSV, the project report PDF, and the README file. there are no subfolders — ALOE uses a flat structure with UUID-based temporary directories created at runtime under a system temp path for each submitted job. these are cleaned up automatically after download.
+
+frontend html files -
+
+1. index.html - the single-page application (SPA) that constitutes the entire ALOE frontend. it handles all user-facing functionality including enzyme upload, ligand upload, 3D structure visualisation, fragment selection, pipeline submission, real-time progress tracking, result download, user authentication, and job history — all within one file without page reloads.
+
+python scripts -
+
+1. app.py - the main Flask web server. handles all REST API endpoints, user authentication (session-based), job management, and directly executes the full 8-stage docking pipeline within background threads using ThreadPoolExecutor. progress is streamed live to the browser via Server-Sent Events (SSE). all cheminformatics, pocket detection, docking, and result packaging logic is contained within this single script.
+
+pipeline stages (executed internally by app.py) -
+
+1. scaffold generation - parses the uploaded ligand (PDB/SDF), runs RDKit BRICSDecompose to identify the scaffold and attachment points, and returns canonical SMILES with [*] placeholders to the frontend.
+2. apo-enzyme preparation - uses BioPython to extract chain A from the uploaded enzyme PDB, removes HETATM records, and writes a clean apo-enzyme file for docking.
+3. binding-pocket detection - runs P2Rank on the apo-enzyme to predict the top binding pocket; falls back to fpocket and then blind docking if P2Rank is unavailable or fails.
+4. fragment substitution - queries the sorted fragment library CSV using binary search by molecular weight window; replaces [*] attachment points on the scaffold with compatible fragments from the ~86,000-entry library.
+5. 3D coordinate generation - generates 3D conformers for each candidate ligand using RDKit ETKDGv3; falls back to UFF optimisation and then OpenBabel if embedding fails.
+6. PDBQT conversion - converts all candidate ligands from SDF to PDBQT format using OpenBabel for AutoDock Vina compatibility.
+7. AutoDock Vina docking - runs Vina in parallel threads for all candidate ligands against the prepared apo-enzyme; docking box is sized dynamically from P2Rank pocket residue Cα distances.
+8. result ranking and packaging - parses Vina output logs, ranks all candidates by binding affinity (kcal/mol), writes a summary CSV, and packages all result files into a downloadable ZIP archive.
+
+fragment library -
+
+file: fragment_library.csv (also referred to as 350_frag_sorted.csv in development)
+source: BRENDA enzyme database (.mol files across all 6 EC classes)
+raw substrates: ~140,000 → after sanitisation: ~136,000
+fragmentation methods: BRICS, RECAP, rotatable single-bond cleavage
+post-processing: canonical SMILES, deduplication, valence/ring/radical filtering, Lipinski Rule-of-Three filter
+final size: ~86,000 unique fragments
+storage: sorted by Avg_MW to enable binary-search lookup by molecular weight range
+
+requirements -
+
+python packages: flask, rdkit, openbabel-wheel, biopython, pillow, werkzeug
+install with: pip install flask rdkit openbabel-wheel biopython pillow --break-system-packages
+
+external software (must be installed separately) -
+1. AutoDock Vina (≥ 1.2.5) - https://github.com/ccsb-scripps/AutoDock-Vina
+   set VINA_PATH environment variable if not on system PATH, like so -
+   export VINA_PATH=/path/to/vina
+2. P2Rank - https://github.com/rdk/p2rank/releases
+   unzip anywhere under ~/ or next to app.py; ALOE auto-discovers p2rank_* directories
+   Java is required to run P2Rank — install a JDK before use.
+
+pre-requisites -
+
+1. install python 3.10 or later
+2. install python dependencies - pip install flask rdkit openbabel-wheel biopython pillow --break-system-packages
+3. install AutoDock Vina and set VINA_PATH if needed
+4. install P2Rank and Java
+5. place fragment_library.csv in the same directory as app.py
+
+to run the tool - python app.py ; open a web browser and go to the URL printed in the terminal (default: http://127.0.0.1:5001)
+
+note: ALOE automatically finds a free port starting from 5001 (port 5000 is skipped to avoid macOS AirPlay conflicts). the exact URL is printed on startup.
