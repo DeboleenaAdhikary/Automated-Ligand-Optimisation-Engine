@@ -51,6 +51,7 @@ pre-requisites -
 3. install AutoDock Vina and set VINA_PATH if needed
 4. install P2Rank and Java
 5. place fragment_library.csv in the same directory as app.py
+6. run the app.py in rdkit_env using conda activate rdkit_env (install using conda create -n rdkit_env -c conda-forge rdkit)
 
 to run the tool - python app.py ; open a web browser and go to the URL printed in the terminal (default: http://127.0.0.1:5001)
 
